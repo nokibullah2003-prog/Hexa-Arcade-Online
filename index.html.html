@@ -1,0 +1,4150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hexa Arcade</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06040f;
+  --card:#100d28;
+  --card2:#13103a;
+  --accent1:#ff6b6b;
+  --accent2:#ffd93d;
+  --accent3:#6bcb77;
+  --accent4:#4d96ff;
+  --accent5:#c77dff;
+  --text:#fff;
+  --muted:#9d9bc0;
+}
+
+@keyframes rotateBg{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:.7;transform:scale(1.08)}}
+@keyframes floatStar{0%{transform:translateY(0) scale(1);opacity:.8}50%{transform:translateY(-12px) scale(1.1);opacity:1}100%{transform:translateY(0) scale(1);opacity:.8}}
+@keyframes shimmer{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes hexSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes hexSpinRev{0%{transform:rotate(0deg)}100%{transform:rotate(-360deg)}}
+@keyframes hPulse{0%,100%{filter:drop-shadow(0 0 8px rgba(255,107,107,.5)) drop-shadow(0 0 20px rgba(77,150,255,.3))}33%{filter:drop-shadow(0 0 12px rgba(255,217,61,.6)) drop-shadow(0 0 24px rgba(107,203,119,.3))}66%{filter:drop-shadow(0 0 10px rgba(107,203,119,.5)) drop-shadow(0 0 22px rgba(199,125,255,.3))}}
+@keyframes logoTextGlow{0%,100%{text-shadow:0 0 20px rgba(255,107,107,.5),0 0 40px rgba(255,107,107,.2)}33%{text-shadow:0 0 20px rgba(255,217,61,.5),0 0 40px rgba(255,217,61,.2)}66%{text-shadow:0 0 20px rgba(77,150,255,.5),0 0 40px rgba(77,150,255,.2)}}
+@keyframes taglineFade{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes cardFloat{0%,100%{transform:translateY(0px)}50%{transform:translateY(-4px)}}
+@keyframes orbitRing{0%{transform:rotate(0deg) scale(1);opacity:.15}50%{transform:rotate(180deg) scale(1.05);opacity:.25}100%{transform:rotate(360deg) scale(1);opacity:.15}}
+@keyframes particleDrift{0%{transform:translate(0,0) scale(0);opacity:0}20%{opacity:1;transform:translate(var(--dx1),var(--dy1)) scale(1)}80%{opacity:.6;transform:translate(var(--dx2),var(--dy2)) scale(.7)}100%{opacity:0;transform:translate(var(--dx3),var(--dy3)) scale(0)}}
+@keyframes scanLine{0%{top:-4px;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
+
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* === ANIMATED BACKGROUND === */
+body::before{
+  content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 40%,rgba(80,20,140,.35) 0%,transparent 70%),
+    radial-gradient(ellipse 50% 45% at 85% 20%,rgba(0,40,100,.4) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 40% at 55% 85%,rgba(10,60,10,.3) 0%,transparent 65%),
+    radial-gradient(ellipse 70% 30% at 50% 50%,rgba(20,10,50,.5) 0%,transparent 80%);
+  pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;
+  background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(77,150,255,.015) 0deg 10deg,transparent 10deg 30deg);
+  animation:rotateBg 60s linear infinite;
+  pointer-events:none;z-index:0;
+}
+
+/* Floating particles canvas */
+#particles-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+
+/* HOME SCREEN */
+#home{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+
+/* === LOGO SECTION === */
+.logo-section{display:flex;flex-direction:column;align-items:center;margin-bottom:2.5rem;position:relative}
+
+.logo-emblem{position:relative;width:110px;height:110px;margin-bottom:1rem}
+.hex-ring{position:absolute;inset:0;animation:hexSpin 12s linear infinite;transform-origin:center}
+.hex-ring-2{position:absolute;inset:8px;animation:hexSpinRev 8s linear infinite;transform-origin:center}
+.hex-core{position:absolute;inset:18px;animation:hPulse 3s ease-in-out infinite}
+.logo-emblem svg{width:100%;height:100%}
+
+.logo-text{font-family:'Fredoka One',cursive;font-size:3.8rem;letter-spacing:2px;
+  background:linear-gradient(90deg,#ff6b6b 0%,#ffd93d 25%,#6bcb77 50%,#4d96ff 75%,#c77dff 100%);
+  background-size:200% 200%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:shimmer 4s ease infinite,logoTextGlow 4s ease infinite;
+  line-height:1;
+}
+.logo-sub{
+  font-size:.75rem;letter-spacing:6px;text-transform:uppercase;color:var(--muted);
+  margin-top:.3rem;animation:taglineFade 3s ease-in-out infinite;
+}
+.logo-line{
+  width:160px;height:2px;margin:.8rem 0;
+  background:linear-gradient(90deg,transparent,#ff6b6b,#ffd93d,#6bcb77,#4d96ff,transparent);
+  background-size:200% 100%;animation:shimmer 3s ease infinite;border-radius:2px;
+}
+
+.tagline{color:var(--muted);font-size:1rem;margin-bottom:3rem;text-align:center;letter-spacing:.5px}
+@keyframes iconBounce{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.12)}}
+@keyframes cardGlow{0%,100%{box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 0px var(--card-shadow)}50%{box-shadow:0 4px 32px rgba(0,0,0,.5),0 0 22px var(--card-shadow)}}
+@keyframes btnShimmer{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+.games-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1.8rem;max-width:1000px;width:100%}
+.game-card{
+  border-radius:28px;padding:2.4rem 1.8rem 2rem;cursor:pointer;
+  border:2px solid var(--card-border);
+  transition:all .35s cubic-bezier(.175,.885,.32,1.275);
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  background:var(--card-bg);
+  box-shadow:0 6px 28px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.10);
+  animation:cardGlow 3.5s ease-in-out infinite;
+}
+.game-card::before{content:'';position:absolute;inset:0;border-radius:28px;
+  background:var(--card-glow);opacity:0.6;
+}
+.game-card::after{
+  content:'';position:absolute;top:0;left:-100%;width:55%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);
+  transition:left .55s ease;
+}
+.game-card:hover::after{left:150%}
+.game-card:hover{transform:translateY(-12px) scale(1.04);border-color:var(--card-border-bright);box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 40px var(--card-shadow)}
+.game-card .icon{font-size:4.8rem;margin-bottom:1.1rem;display:block;
+  filter:drop-shadow(0 4px 14px rgba(0,0,0,.5));
+  animation:iconBounce 2.8s ease-in-out infinite;
+}
+.game-card h2{font-family:'Fredoka One',cursive;font-size:1.9rem;margin-bottom:0;
+  background:var(--title-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,.3));
+}
+.play-btn{margin-top:1.6rem;padding:.75rem 2.2rem;border:none;border-radius:50px;
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:1.05rem;cursor:pointer;
+  background:var(--btn-bg);background-size:200% 200%;
+  color:#fff;letter-spacing:1px;text-transform:uppercase;
+  box-shadow:0 5px 20px var(--card-shadow),0 2px 6px rgba(0,0,0,.4);
+  transition:transform .2s,box-shadow .25s;
+  animation:btnShimmer 3s ease infinite;
+}
+.play-btn:hover{transform:scale(1.1) translateY(-2px);box-shadow:0 8px 30px var(--card-shadow),0 0 20px var(--card-shadow)}
+
+.card-ludo{
+  --card-bg:linear-gradient(145deg,#2a0820,#1a0510,#2d0a1a);
+  --card-border:rgba(255,107,107,.45);
+  --card-border-bright:rgba(255,107,107,.9);
+  --card-shadow:rgba(255,80,80,.4);
+  --btn-bg:linear-gradient(135deg,#ff6b6b,#ff3860,#ff6b6b);
+  --card-glow:radial-gradient(ellipse at 30% 20%,rgba(255,107,107,.18),transparent 65%);
+  --title-grad:linear-gradient(90deg,#ff6b6b,#ffaaaa,#ff4757);
+}
+.card-snake{
+  --card-bg:linear-gradient(145deg,#062014,#031a0d,#0a2a18);
+  --card-border:rgba(107,203,119,.45);
+  --card-border-bright:rgba(107,203,119,.9);
+  --card-shadow:rgba(70,210,100,.4);
+  --btn-bg:linear-gradient(135deg,#6bcb77,#2ed573,#6bcb77);
+  --card-glow:radial-gradient(ellipse at 30% 20%,rgba(107,203,119,.18),transparent 65%);
+  --title-grad:linear-gradient(90deg,#6bcb77,#aaffbb,#2ed573);
+}
+.card-chess{
+  --card-bg:linear-gradient(145deg,#1a1400,#120f00,#221a00);
+  --card-border:rgba(255,217,61,.45);
+  --card-border-bright:rgba(255,217,61,.9);
+  --card-shadow:rgba(255,200,30,.4);
+  --btn-bg:linear-gradient(135deg,#ffd93d,#ffa502,#ffd93d);
+  --card-glow:radial-gradient(ellipse at 30% 20%,rgba(255,217,61,.18),transparent 65%);
+  --title-grad:linear-gradient(90deg,#ffd93d,#fff0aa,#ffa502);
+}
+.card-carrom{
+  --card-bg:linear-gradient(145deg,#040e28,#020a1e,#061232);
+  --card-border:rgba(77,150,255,.45);
+  --card-border-bright:rgba(77,150,255,.9);
+  --card-shadow:rgba(60,130,255,.4);
+  --btn-bg:linear-gradient(135deg,#4d96ff,#5e60ce,#4d96ff);
+  --card-glow:radial-gradient(ellipse at 30% 20%,rgba(77,150,255,.18),transparent 65%);
+  --title-grad:linear-gradient(90deg,#4d96ff,#aaccff,#5e60ce);
+}
+
+/* GAME SCREEN */
+.game-screen{display:none;position:fixed;inset:0;z-index:100;flex-direction:column;background-size:400% 400%;animation:bgShift 8s ease infinite;}
+.game-screen.active{display:flex}
+
+/* Ludo — warm fiery red-orange-purple */
+#ludo-screen{
+  background:linear-gradient(135deg,#1a0030 0%,#3d0050 20%,#7b1a00 45%,#c0390b 65%,#3d0050 85%,#1a0030 100%);
+  background-size:400% 400%;animation:bgShift 8s ease infinite;
+}
+/* Snake — deep jungle green-teal */
+#snake-screen{
+  background:linear-gradient(135deg,#001a0a 0%,#003320 20%,#005c2e 45%,#007a50 65%,#003a3a 85%,#001a0a 100%);
+  background-size:400% 400%;animation:bgShift 9s ease infinite;
+}
+/* Chess — royal navy-gold */
+#chess-screen{
+  background:linear-gradient(135deg,#0a0820 0%,#1a1050 20%,#2a1a70 45%,#3d2a00 65%,#6b4a00 75%,#1a1050 90%,#0a0820 100%);
+  background-size:400% 400%;animation:bgShift 10s ease infinite;
+}
+/* Carrom — ocean blue-cyan-indigo */
+#carrom-screen{
+  background:linear-gradient(135deg,#000a20 0%,#001040 20%,#002060 45%,#003880 60%,#005580 75%,#001040 90%,#000a20 100%);
+  background-size:400% 400%;animation:bgShift 7s ease infinite;
+}
+
+@keyframes bgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+.game-header{display:flex;align-items:center;gap:1rem;padding:1rem 1.5rem;
+  background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.12);
+  flex-shrink:0;backdrop-filter:blur(4px);
+}
+.back-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;padding:.5rem 1rem;
+  border-radius:50px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;
+  font-size:.9rem;transition:background .2s;
+}
+.back-btn:hover{background:rgba(255,255,255,.28)}
+.game-title{font-family:'Fredoka One',cursive;font-size:1.5rem}
+.game-content{flex:1;display:flex;align-items:center;justify-content:center;padding:1rem;overflow:auto}
+
+/* STATUS BAR */
+.status-bar{background:rgba(0,0,0,.28);padding:.5rem 1rem;text-align:center;
+  font-size:.9rem;color:rgba(255,255,255,.75);flex-shrink:0;border-top:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(4px);
+}
+
+/* ===== LUDO ===== */
+#ludo-container{display:flex;flex-direction:column;align-items:center;gap:1rem;width:100%;max-width:700px}
+#ludo-info{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+.ludo-player-info{background:var(--card);border-radius:12px;padding:.5rem 1rem;
+  font-weight:700;font-size:.9rem;border:2px solid transparent;transition:border-color .3s;
+}
+.ludo-player-info.active-turn{border-color:var(--player-color)}
+canvas#ludo-board{border-radius:16px;box-shadow:0 0 40px rgba(0,0,0,.5);cursor:pointer;max-width:100%;max-height:60vh}
+#ludo-dice-area{display:flex;align-items:center;gap:1rem}
+.dice{width:60px;height:60px;background:#fff;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:2rem;box-shadow:0 4px 15px rgba(0,0,0,.3);
+  transition:transform .2s;cursor:pointer;
+}
+.roll-btn{padding:.6rem 1.5rem;background:linear-gradient(135deg,#ff6b6b,#ff8e53);
+  border:none;border-radius:50px;font-family:'Nunito',sans-serif;font-weight:800;
+  font-size:1rem;color:#fff;cursor:pointer;transition:transform .2s,box-shadow .2s;
+}
+.roll-btn:hover{transform:scale(1.05);box-shadow:0 4px 20px rgba(255,107,107,.4)}
+.roll-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ===== LUDO PLAYER SELECTION ===== */
+.player-count-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3rem;
+  width:120px;padding:1.5rem 1rem;border-radius:20px;cursor:pointer;
+  background:linear-gradient(145deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03));
+  border:2px solid rgba(255,255,255,0.12);color:#fff;
+  transition:all .3s cubic-bezier(.175,.885,.32,1.275);
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+}
+.player-count-btn:hover{
+  transform:translateY(-8px) scale(1.06);
+  border-color:var(--btn-color);
+  box-shadow:0 12px 40px rgba(0,0,0,0.5), 0 0 20px color-mix(in srgb, var(--btn-color) 40%, transparent);
+  background:linear-gradient(145deg,color-mix(in srgb, var(--btn-color) 18%, transparent),color-mix(in srgb, var(--btn-color) 8%, transparent));
+}
+.pcb-dots{display:flex;gap:5px;margin-top:.3rem}
+.pcb-dots span{width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.4)}
+
+/* ===== SNAKES & LADDERS ===== */
+#snake-container{display:flex;flex-direction:column;align-items:center;gap:1rem;width:100%;max-width:700px}
+canvas#snake-board{border-radius:16px;box-shadow:0 0 40px rgba(0,0,0,.5);max-width:100%;max-height:60vh}
+#snake-info{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+.snake-player-info{background:var(--card);border-radius:12px;padding:.5rem 1rem;font-weight:700;font-size:.9rem;border:2px solid transparent}
+.snake-player-info.active-turn{border-color:gold}
+#snake-dice-area{display:flex;align-items:center;gap:1rem}
+
+/* ===== CHESS ===== */
+#chess-container{display:flex;flex-direction:column;align-items:center;gap:1rem;width:100%;max-width:780px}
+#chess-status{background:var(--card);padding:.5rem 1.5rem;border-radius:50px;font-weight:700}
+canvas#chess-board{border-radius:8px;box-shadow:0 0 40px rgba(0,0,0,.5);cursor:pointer;max-width:100%;max-height:85vh}
+#chess-controls{display:flex;gap:.8rem}
+.chess-btn{padding:.5rem 1.2rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  color:#fff;border-radius:50px;font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;transition:background .2s;
+}
+.chess-btn:hover{background:rgba(255,255,255,.2)}
+
+/* ===== CARROM ===== */
+#carrom-container{display:flex;flex-direction:column;align-items:center;gap:1rem;width:100%;max-width:700px}
+canvas#carrom-board{border-radius:12px;box-shadow:0 0 40px rgba(0,0,0,.5);cursor:crosshair;max-width:100%;max-height:65vh}
+#carrom-info{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+.carrom-player-info{background:var(--card);border-radius:12px;padding:.5rem 1rem;font-weight:700;font-size:.9rem;border:2px solid transparent}
+.carrom-player-info.active-turn{border-color:gold}
+#carrom-controls{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;justify-content:center}
+#aim-display{background:var(--card);border-radius:12px;padding:.4rem .8rem;font-size:.9rem;color:var(--muted)}
+.strike-btn{padding:.6rem 1.5rem;background:linear-gradient(135deg,#4d96ff,#5e60ce);
+  border:none;border-radius:50px;font-family:'Nunito',sans-serif;font-weight:800;
+  font-size:1rem;color:#fff;cursor:pointer;transition:transform .2s,box-shadow .2s;
+}
+.strike-btn:hover{transform:scale(1.05);box-shadow:0 4px 20px rgba(77,150,255,.4)}
+#power-slider{width:150px}
+
+/* ===== ROOM SYSTEM ===== */
+#room-modal{
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);
+  align-items:center;justify-content:center;
+}
+#room-modal.active{display:flex}
+.room-box{
+  background:linear-gradient(145deg,#13103a,#0d0a28);
+  border:2px solid rgba(77,150,255,0.4);
+  border-radius:24px;padding:2.5rem 2rem;
+  width:min(420px,92vw);position:relative;
+  box-shadow:0 0 60px rgba(77,150,255,0.2),0 20px 60px rgba(0,0,0,0.8);
+}
+.room-close{
+  position:absolute;top:1rem;right:1rem;
+  background:rgba(255,255,255,0.1);border:none;color:#fff;
+  width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;transition:background .2s;
+}
+.room-close:hover{background:rgba(255,255,255,0.22)}
+.room-title{font-family:"Fredoka One",cursive;font-size:2rem;text-align:center;
+  background:linear-gradient(90deg,#4d96ff,#c77dff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:.3rem;
+}
+.room-subtitle{text-align:center;color:rgba(255,255,255,0.45);font-size:.85rem;margin-bottom:1.8rem;letter-spacing:.5px}
+.room-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;background:rgba(255,255,255,0.06);border-radius:50px;padding:.3rem}
+.room-tab{flex:1;padding:.55rem;border:none;border-radius:50px;
+  font-family:"Nunito",sans-serif;font-weight:800;font-size:.9rem;
+  cursor:pointer;transition:all .25s;color:rgba(255,255,255,0.5);background:transparent;
+}
+.room-tab.active{background:linear-gradient(135deg,#4d96ff,#5e60ce);color:#fff;box-shadow:0 4px 15px rgba(77,150,255,0.4)}
+.room-input-wrap{margin-bottom:1rem}
+.room-input-label{font-size:.8rem;color:rgba(255,255,255,0.5);margin-bottom:.4rem;letter-spacing:.5px;text-transform:uppercase}
+.room-input{
+  width:100%;padding:.75rem 1rem;background:rgba(255,255,255,0.07);
+  border:1.5px solid rgba(255,255,255,0.15);border-radius:12px;
+  color:#fff;font-family:"Nunito",sans-serif;font-size:1rem;font-weight:600;
+  outline:none;transition:border-color .2s;box-sizing:border-box;
+}
+.room-input:focus{border-color:rgba(77,150,255,0.7)}
+.room-input::placeholder{color:rgba(255,255,255,0.25)}
+.room-game-select{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1.2rem}
+.room-game-btn{
+  padding:.6rem .5rem;border-radius:12px;border:1.5px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);
+  font-family:"Nunito",sans-serif;font-weight:700;font-size:.85rem;
+  cursor:pointer;transition:all .2s;text-align:center;
+}
+.room-game-btn.selected{border-color:rgba(77,150,255,0.8);background:rgba(77,150,255,0.18);color:#fff}
+.room-action-btn{
+  width:100%;padding:.85rem;border:none;border-radius:50px;
+  font-family:"Nunito",sans-serif;font-weight:900;font-size:1.05rem;
+  cursor:pointer;color:#fff;letter-spacing:.5px;
+  background:linear-gradient(135deg,#4d96ff,#5e60ce,#4d96ff);
+  background-size:200% 200%;animation:btnShimmer 3s ease infinite;
+  box-shadow:0 5px 20px rgba(77,150,255,0.4);transition:transform .2s,box-shadow .2s;
+  margin-top:.5rem;
+}
+.room-action-btn:hover{transform:scale(1.03) translateY(-2px);box-shadow:0 8px 30px rgba(77,150,255,0.5)}
+.room-action-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.room-divider{display:flex;align-items:center;gap:.8rem;margin:.8rem 0;color:rgba(255,255,255,0.2);font-size:.8rem}
+.room-divider::before,.room-divider::after{content:"";flex:1;height:1px;background:rgba(255,255,255,0.1)}
+.room-info-box{
+  background:rgba(77,150,255,0.1);border:1px solid rgba(77,150,255,0.3);
+  border-radius:12px;padding:1rem;margin-top:1rem;display:none;
+}
+.room-info-box.visible{display:block}
+.room-id-display{
+  font-family:"Fredoka One",cursive;font-size:2.2rem;text-align:center;
+  letter-spacing:6px;color:#4d96ff;margin:.4rem 0;
+  text-shadow:0 0 20px rgba(77,150,255,0.5);
+}
+.room-share-link{
+  font-size:.72rem;word-break:break-all;color:rgba(255,255,255,0.4);
+  background:rgba(0,0,0,0.3);padding:.5rem .7rem;border-radius:8px;margin-top:.5rem;
+  cursor:pointer;transition:background .2s;
+}
+.room-share-link:hover{background:rgba(77,150,255,0.15);color:rgba(255,255,255,0.7)}
+.room-copy-btn{
+  width:100%;margin-top:.5rem;padding:.5rem;border-radius:8px;border:1px solid rgba(77,150,255,0.4);
+  background:rgba(77,150,255,0.12);color:#4d96ff;font-family:"Nunito",sans-serif;
+  font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s;
+}
+.room-copy-btn:hover{background:rgba(77,150,255,0.25)}
+.room-status-msg{text-align:center;font-size:.85rem;min-height:1.2rem;margin-top:.6rem;font-weight:700}
+.room-status-msg.ok{color:#6bcb77}
+.room-status-msg.err{color:#ff6b6b}
+.room-status-msg.info{color:#4d96ff}
+.room-waiting{text-align:center;padding:1rem;color:rgba(255,255,255,0.6);font-size:.9rem}
+.room-waiting-dots::after{content:"...";animation:dotsAnim 1.2s infinite}
+@keyframes dotsAnim{0%{content:"."}33%{content:".."}66%{content:"..."}100%{content:"."}}
+
+/* Online badge on game cards */
+.online-badge{
+  position:absolute;top:12px;right:12px;
+  background:linear-gradient(135deg,#4d96ff,#5e60ce);
+  color:#fff;font-size:.7rem;font-weight:800;
+  padding:.2rem .55rem;border-radius:50px;letter-spacing:.5px;
+  box-shadow:0 2px 8px rgba(77,150,255,0.4);
+}
+/* Room button in header */
+.room-header-btn{
+  margin-left:auto;padding:.4rem 1rem;
+  background:linear-gradient(135deg,rgba(77,150,255,0.3),rgba(94,96,206,0.3));
+  border:1px solid rgba(77,150,255,0.5);color:#4d96ff;
+  border-radius:50px;font-family:"Nunito",sans-serif;font-weight:700;
+  font-size:.82rem;cursor:pointer;transition:all .2s;
+}
+.room-header-btn:hover{background:linear-gradient(135deg,rgba(77,150,255,0.5),rgba(94,96,206,0.5));color:#fff}
+/* Online players badge in game header */
+#online-players-bar{
+  display:none;padding:.3rem 1rem;background:rgba(77,150,255,0.1);
+  border-bottom:1px solid rgba(77,150,255,0.2);font-size:.8rem;
+  color:rgba(77,150,255,0.9);text-align:center;flex-shrink:0;
+}
+#online-players-bar.visible{display:block}
+</style>
+</head>
+<body>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://wvzrdksnhonhtxuvfgrk.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2enJka3NuaG9uaHR4dXZmZ3JrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODk0NDEsImV4cCI6MjA5Mjg2NTQ0MX0.jMsFremLizsvdTAAnXgVsIBL1zU5agjF4P4b9MFGing';
+let supabase, db = null;
+try {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  db = supabase; // use db as alias so existing code references work
+} catch(e) { supabase = null; db = null; }
+</script>
+
+<!-- HOME -->
+<canvas id="particles-canvas"></canvas>
+
+<!-- ROOM SYSTEM MODAL -->
+<div id="room-modal">
+  <div class="room-box">
+    <button class="room-close" onclick="closeRoomModal()">✕</button>
+    <div class="room-title">🎮 Game Room</div>
+    <div class="room-subtitle">Play online with friends</div>
+    <div class="room-tabs">
+      <button class="room-tab active" id="tab-create" onclick="switchRoomTab('create')">Create Room</button>
+      <button class="room-tab" id="tab-join" onclick="switchRoomTab('join')">Join Room</button>
+    </div>
+
+    <!-- CREATE ROOM -->
+    <div id="panel-create">
+      <div class="room-input-wrap">
+        <div class="room-input-label">Your Name</div>
+        <input class="room-input" id="create-name" placeholder="Enter your name..." maxlength="16"/>
+      </div>
+      <div class="room-input-wrap">
+        <div class="room-input-label">Room Password (optional)</div>
+        <input class="room-input" id="create-password" placeholder="Leave blank for open room..." maxlength="20" type="password"/>
+      </div>
+      <div class="room-input-wrap">
+        <div class="room-input-label">Select Game</div>
+        <div class="room-game-select">
+          <button class="room-game-btn selected" data-game="ludo" onclick="selectRoomGame(this)">🎲 Ludo</button>
+          <button class="room-game-btn" data-game="snake" onclick="selectRoomGame(this)">🐍 Snake & Ladders</button>
+          <button class="room-game-btn" data-game="chess" onclick="selectRoomGame(this)">♟️ Chess</button>
+          <button class="room-game-btn" data-game="carrom" onclick="selectRoomGame(this)">🎯 Carrom</button>
+        </div>
+      </div>
+      <button class="room-action-btn" id="create-room-btn" onclick="createRoom()">✨ Create Room</button>
+      <div class="room-info-box" id="create-info">
+        <div style="font-size:.75rem;color:rgba(255,255,255,0.45);text-align:center;letter-spacing:1px;text-transform:uppercase">Room ID</div>
+        <div class="room-id-display" id="display-room-id">——</div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:.4rem">Share this link with your friend:</div>
+        <div class="room-share-link" id="display-share-link" onclick="copyShareLink()">—</div>
+        <button class="room-copy-btn" onclick="copyShareLink()">📋 Copy Link</button>
+        <div class="room-waiting">Waiting for players to join <span class="room-waiting-dots"></span></div>
+      </div>
+      <div class="room-status-msg" id="create-status"></div>
+    </div>
+
+    <!-- JOIN ROOM -->
+    <div id="panel-join" style="display:none">
+      <div class="room-input-wrap">
+        <div class="room-input-label">Your Name</div>
+        <input class="room-input" id="join-name" placeholder="Enter your name..." maxlength="16"/>
+      </div>
+      <div class="room-input-wrap">
+        <div class="room-input-label">Room ID</div>
+        <input class="room-input" id="join-room-id" placeholder="Enter 6-digit room ID..." maxlength="6" style="letter-spacing:4px;font-size:1.2rem;text-align:center" oninput="this.value=this.value.toUpperCase()"/>
+      </div>
+      <div class="room-input-wrap">
+        <div class="room-input-label">Password (if required)</div>
+        <input class="room-input" id="join-password" placeholder="Leave blank if no password..." type="password" maxlength="20"/>
+      </div>
+      <button class="room-action-btn" id="join-room-btn" onclick="joinRoom()">🚀 Join Room</button>
+      <div class="room-status-msg" id="join-status"></div>
+    </div>
+  </div>
+</div>
+<div id="home">
+  <div class="logo-section">
+
+    <!-- Animated H Emblem -->
+    <div class="logo-emblem">
+      <!-- Outer spinning hex ring -->
+      <svg class="hex-ring" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;width:100%;height:100%">
+        <defs>
+          <linearGradient id="ring1grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ff6b6b"/>
+            <stop offset="50%" stop-color="#ffd93d"/>
+            <stop offset="100%" stop-color="#4d96ff"/>
+          </linearGradient>
+        </defs>
+        <polygon points="55,3 103,30 103,80 55,107 7,80 7,30" fill="none" stroke="url(#ring1grad)" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.7"/>
+      </svg>
+      <!-- Inner counter-spinning hex ring -->
+      <svg class="hex-ring-2" viewBox="0 0 94 94" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:8px;left:8px;width:calc(100% - 16px);height:calc(100% - 16px)">
+        <defs>
+          <linearGradient id="ring2grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6bcb77"/>
+            <stop offset="50%" stop-color="#c77dff"/>
+            <stop offset="100%" stop-color="#ff6b6b"/>
+          </linearGradient>
+        </defs>
+        <polygon points="47,3 86,25 86,69 47,91 8,69 8,25" fill="none" stroke="url(#ring2grad)" stroke-width="1" stroke-dasharray="3 5" opacity="0.5"/>
+      </svg>
+      <!-- Core glowing hex with H -->
+      <svg class="hex-core" viewBox="0 0 74 74" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:18px;left:18px;width:calc(100% - 36px);height:calc(100% - 36px)">
+        <defs>
+          <radialGradient id="coreGrad" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stop-color="#1a1650"/>
+            <stop offset="100%" stop-color="#0d0a1f"/>
+          </radialGradient>
+          <linearGradient id="strokeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ff6b6b"/>
+            <stop offset="33%" stop-color="#ffd93d"/>
+            <stop offset="66%" stop-color="#6bcb77"/>
+            <stop offset="100%" stop-color="#4d96ff"/>
+          </linearGradient>
+        </defs>
+        <polygon points="37,2 70,20 70,54 37,72 4,54 4,20" fill="url(#coreGrad)" stroke="url(#strokeGrad)" stroke-width="2"/>
+        <text x="37" y="52" font-family="Arial Black,Arial,sans-serif" font-size="38" font-weight="900" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" letter-spacing="0">H</text>
+      </svg>
+    </div>
+
+    <!-- Logo Text -->
+    <div class="logo-text">Hexa Arcade</div>
+    <div class="logo-line"></div>
+    <div class="logo-sub">builder: IT'z Nokibhexa</div>
+  </div>
+
+  <div class="games-grid">
+    <div class="game-card card-ludo" onclick="openGame('ludo')">
+      <span class="icon" style="font-size:0;display:block;margin-bottom:1.1rem">
+<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="luGold" cx="35%" cy="25%" r="70%">
+      <stop offset="0%" stop-color="#fff0a0"/>
+      <stop offset="40%" stop-color="#f0c030"/>
+      <stop offset="100%" stop-color="#8a6000"/>
+    </radialGradient>
+    <radialGradient id="luGold2" cx="40%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#7a5000"/>
+    </radialGradient>
+    <filter id="luGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Dice body -->
+  <rect x="12" y="12" width="56" height="56" rx="10" fill="url(#luGold)" stroke="#c8960c" stroke-width="2"/>
+  <!-- Colored quadrants inside -->
+  <clipPath id="luClip"><rect x="14" y="14" width="52" height="52" rx="8"/></clipPath>
+  <g clip-path="url(#luClip)">
+    <rect x="14" y="14" width="26" height="26" fill="#c0392b" opacity="0.75"/>
+    <rect x="40" y="14" width="26" height="26" fill="#2471a3" opacity="0.75"/>
+    <rect x="14" y="40" width="26" height="26" fill="#27ae60" opacity="0.75"/>
+    <rect x="40" y="40" width="26" height="26" fill="#f0c030" opacity="0.65"/>
+  </g>
+  <!-- Gold cross divider -->
+  <rect x="37" y="14" width="6" height="52" fill="url(#luGold2)"/>
+  <rect x="14" y="37" width="52" height="6" fill="url(#luGold2)"/>
+  <!-- Center H medallion -->
+  <circle cx="40" cy="40" r="13" fill="url(#luGold)" stroke="#c8960c" stroke-width="1.5"/>
+  <text x="40" y="45" font-family="Georgia,serif" font-size="15" font-weight="900" fill="#3a2000" text-anchor="middle">H</text>
+  <!-- Corner dots -->
+  <circle cx="21" cy="21" r="3" fill="#ffd700"/>
+  <circle cx="59" cy="21" r="3" fill="#ffd700"/>
+  <circle cx="21" cy="59" r="3" fill="#ffd700"/>
+  <circle cx="59" cy="59" r="3" fill="#ffd700"/>
+</svg></span>
+      <h2>Ludo</h2>
+      <button class="play-btn">Play Now</button>
+    </div>
+    <div class="game-card card-snake" onclick="openGame('snake')">
+      <span class="icon" style="font-size:0;display:block;margin-bottom:1.1rem">
+<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="snGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff0a0"/>
+      <stop offset="50%" stop-color="#d4a017"/>
+      <stop offset="100%" stop-color="#7a5000"/>
+    </linearGradient>
+    <radialGradient id="snHbg" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#3a2800"/>
+      <stop offset="100%" stop-color="#1a1000"/>
+    </radialGradient>
+    <radialGradient id="snSnake" cx="40%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#e0e0e0"/>
+      <stop offset="100%" stop-color="#aaa"/>
+    </radialGradient>
+  </defs>
+  <!-- Ladder left post -->
+  <rect x="20" y="6" width="8" height="68" rx="3" fill="url(#snGold)"/>
+  <!-- Ladder right post -->
+  <rect x="52" y="6" width="8" height="68" rx="3" fill="url(#snGold)"/>
+  <!-- Rungs -->
+  <rect x="20" y="14" width="40" height="5" rx="2" fill="url(#snGold)"/>
+  <rect x="20" y="28" width="40" height="5" rx="2" fill="url(#snGold)"/>
+  <rect x="20" y="42" width="40" height="5" rx="2" fill="url(#snGold)"/>
+  <rect x="20" y="56" width="40" height="5" rx="2" fill="url(#snGold)"/>
+  <!-- H emblem medallion on center of ladder -->
+  <circle cx="40" cy="38" r="13" fill="url(#snHbg)" stroke="url(#snGold)" stroke-width="2"/>
+  <circle cx="40" cy="38" r="10" fill="none" stroke="#c8960c" stroke-width="0.8" opacity="0.6"/>
+  <text x="40" y="44" font-family="Georgia,serif" font-size="18" font-weight="900" fill="url(#snGold)" text-anchor="middle">H</text>
+  <!-- Snake body -->
+  <path d="M54 72 Q68 62 63 50 Q57 37 65 27 Q71 18 60 11 Q51 6 44 13" fill="none" stroke="url(#snSnake)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M54 72 Q68 62 63 50 Q57 37 65 27 Q71 18 60 11 Q51 6 44 13" fill="none" stroke="#c8960c" stroke-width="1.2" opacity="0.6"/>
+  <!-- Snake head -->
+  <ellipse cx="42" cy="12" rx="8" ry="5.5" fill="url(#snSnake)" stroke="#c8960c" stroke-width="1.2" transform="rotate(-20 42 12)"/>
+  <!-- Snake eyes -->
+  <circle cx="39" cy="10" r="1.8" fill="#e74c3c"/>
+  <circle cx="45" cy="9" r="1.8" fill="#e74c3c"/>
+  <!-- Snake tongue -->
+  <path d="M37 14 L32 17 M32 17 L29 15 M32 17 L29 19" stroke="#e74c3c" stroke-width="1.2" fill="none"/>
+  <!-- Gem at tail -->
+  <circle cx="54" cy="74" r="4.5" fill="#e74c3c" stroke="#c0392b" stroke-width="1.5"/>
+</svg></span>
+      <h2>Snakes & Ladders</h2>
+      <button class="play-btn">Play Now</button>
+    </div>
+    <div class="game-card card-chess" onclick="openGame('chess')">
+      <span class="icon" style="font-size:0;display:block;margin-bottom:1.1rem">
+<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="chPiece" cx="35%" cy="25%" r="70%">
+      <stop offset="0%" stop-color="#444"/>
+      <stop offset="60%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#000"/>
+    </radialGradient>
+    <linearGradient id="chGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff0a0"/>
+      <stop offset="50%" stop-color="#d4a017"/>
+      <stop offset="100%" stop-color="#7a5000"/>
+    </linearGradient>
+  </defs>
+  <!-- Base -->
+  <ellipse cx="40" cy="72" rx="22" ry="6" fill="url(#chPiece)" stroke="url(#chGold)" stroke-width="2"/>
+  <!-- Stem -->
+  <rect x="28" y="55" width="24" height="16" rx="4" fill="url(#chPiece)" stroke="url(#chGold)" stroke-width="1.5"/>
+  <!-- Gold band on stem -->
+  <rect x="27" y="60" width="26" height="5" rx="2" fill="url(#chGold)"/>
+  <!-- Body -->
+  <ellipse cx="40" cy="48" rx="16" ry="10" fill="url(#chPiece)" stroke="url(#chGold)" stroke-width="1.5"/>
+  <!-- Neck -->
+  <rect x="32" y="28" width="16" height="22" rx="8" fill="url(#chPiece)" stroke="url(#chGold)" stroke-width="1.5"/>
+  <!-- H on body -->
+  <text x="40" y="53" font-family="Georgia,serif" font-size="11" font-weight="900" fill="url(#chGold)" text-anchor="middle">H</text>
+  <!-- Head -->
+  <ellipse cx="40" cy="24" rx="11" ry="8" fill="url(#chPiece)" stroke="url(#chGold)" stroke-width="1.5"/>
+  <!-- Cross top -->
+  <rect x="37" y="8" width="6" height="16" rx="2" fill="url(#chPiece)" stroke="url(#chGold)" stroke-width="1.5"/>
+  <rect x="33" y="13" width="14" height="5" rx="2" fill="url(#chPiece)" stroke="url(#chGold)" stroke-width="1.5"/>
+  <!-- Cross gold fill -->
+  <rect x="38" y="9" width="4" height="14" rx="1" fill="url(#chGold)" opacity="0.7"/>
+  <rect x="34" y="14" width="12" height="3" rx="1" fill="url(#chGold)" opacity="0.7"/>
+</svg></span>
+      <h2>Chess</h2>
+      <button class="play-btn">Play Now</button>
+    </div>
+    <div class="game-card card-carrom" onclick="openGame('carrom')">
+      <span class="icon" style="font-size:0;display:block;margin-bottom:1.1rem">
+<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="caDisc" cx="40%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#444"/>
+      <stop offset="60%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#000"/>
+    </radialGradient>
+    <radialGradient id="caGold" cx="35%" cy="25%" r="70%">
+      <stop offset="0%" stop-color="#fff0a0"/>
+      <stop offset="50%" stop-color="#d4a017"/>
+      <stop offset="100%" stop-color="#7a5000"/>
+    </radialGradient>
+  </defs>
+  <!-- Outer glow ring -->
+  <circle cx="40" cy="40" r="38" fill="none" stroke="#d4a017" stroke-width="1" opacity="0.5"/>
+  <!-- Main disc -->
+  <circle cx="40" cy="40" r="35" fill="url(#caDisc)"/>
+  <!-- Gold mandala ring -->
+  <circle cx="40" cy="40" r="35" fill="none" stroke="url(#caGold)" stroke-width="2.5"/>
+  <!-- Mandala petals -->
+  <g stroke="#d4a017" stroke-width="1" fill="none" opacity="0.8">
+    <path d="M40 7 Q45 18 40 22 Q35 18 40 7"/>
+    <path d="M40 73 Q45 62 40 58 Q35 62 40 73"/>
+    <path d="M7 40 Q18 45 22 40 Q18 35 7 40"/>
+    <path d="M73 40 Q62 45 58 40 Q62 35 73 40"/>
+    <path d="M18 18 Q25 28 22 32 Q18 28 18 18"/>
+    <path d="M62 18 Q55 28 58 32 Q62 28 62 18"/>
+    <path d="M18 62 Q25 52 22 48 Q18 52 18 62"/>
+    <path d="M62 62 Q55 52 58 48 Q62 52 62 62"/>
+  </g>
+  <!-- Inner gold ring -->
+  <circle cx="40" cy="40" r="22" fill="none" stroke="#d4a017" stroke-width="1.5"/>
+  <!-- Inner disc -->
+  <circle cx="40" cy="40" r="18" fill="#111" stroke="#d4a017" stroke-width="1"/>
+  <!-- H -->
+  <text x="40" y="46" font-family="Georgia,serif" font-size="17" font-weight="900" fill="url(#caGold)" text-anchor="middle">H</text>
+  <!-- Emerald gems -->
+  <circle cx="40" cy="5" r="3.5" fill="#2ecc71" stroke="#27ae60" stroke-width="1"/>
+  <circle cx="40" cy="75" r="3.5" fill="#2ecc71" stroke="#27ae60" stroke-width="1"/>
+  <circle cx="5" cy="40" r="3.5" fill="#2ecc71" stroke="#27ae60" stroke-width="1"/>
+  <circle cx="75" cy="40" r="3.5" fill="#2ecc71" stroke="#27ae60" stroke-width="1"/>
+</svg></span>
+      <h2>Carrom</h2>
+      <button class="play-btn">Play Now</button>
+    </div>
+    <!-- Online Play Button -->
+  <div style="margin-top:2rem;text-align:center">
+    <button onclick="openRoomModal()" style="
+      padding:.85rem 2.8rem;border:2px solid rgba(77,150,255,0.5);
+      border-radius:50px;background:linear-gradient(135deg,rgba(77,150,255,0.15),rgba(94,96,206,0.15));
+      color:#4d96ff;font-family:'Fredoka One',cursive;font-size:1.3rem;
+      cursor:pointer;letter-spacing:1px;
+      box-shadow:0 0 30px rgba(77,150,255,0.2);
+      transition:all .3s;
+    " onmouseover="this.style.background='linear-gradient(135deg,rgba(77,150,255,0.3),rgba(94,96,206,0.3))';this.style.color='#fff'"
+       onmouseout="this.style.background='linear-gradient(135deg,rgba(77,150,255,0.15),rgba(94,96,206,0.15))';this.style.color='#4d96ff'">
+      🌐 Play Online
+    </button>
+    <div style="color:rgba(255,255,255,0.25);font-size:.78rem;margin-top:.5rem">Create or join a room to play with friends</div>
+  </div>
+</div>
+</div>
+
+<!-- LUDO SCREEN -->
+<div id="ludo-screen" class="game-screen">
+  <div id="online-players-bar" style="display:none;padding:.3rem 1rem;background:rgba(77,150,255,0.1);border-bottom:1px solid rgba(77,150,255,0.2);font-size:.8rem;color:rgba(77,150,255,0.9);text-align:center;flex-shrink:0;">🌐 Online Room Active</div>
+  <div class="game-header">
+    <button class="back-btn" onclick="closeGame('ludo')">← Back</button>
+    <span class="game-title">🎲 Ludo</span>
+    <span id="ludo-turn-info" style="margin-left:auto;font-size:.9rem;color:var(--muted)"></span>
+  </div>
+
+  <!-- Player Selection Overlay -->
+  <div id="ludo-player-select" style="
+    position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2rem;
+    background:linear-gradient(135deg,rgba(26,0,48,0.97),rgba(61,0,80,0.97));
+    backdrop-filter:blur(8px);
+  ">
+    <div style="text-align:center">
+      <div style="font-size:4rem;margin-bottom:.5rem">🎲</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:2.4rem;
+        background:linear-gradient(90deg,#ff6b6b,#ffd93d,#6bcb77,#4d96ff);
+        -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+        Ludo
+      </div>
+      <div style="color:rgba(255,255,255,0.6);font-size:1rem;margin-top:.4rem;letter-spacing:1px;">
+        How many players?
+      </div>
+    </div>
+    <!-- AI Mode Toggle for Ludo -->
+    <div style="display:flex;align-items:center;gap:.8rem;background:rgba(255,255,255,0.07);padding:.6rem 1.2rem;border-radius:50px;border:1px solid rgba(255,255,255,0.12)">
+      <span style="font-size:1.2rem">🤖</span>
+      <span style="font-size:.9rem;font-weight:700;color:rgba(255,255,255,0.8)">Play vs AI</span>
+      <div id="ludo-ai-toggle" onclick="toggleLudoAI()" style="
+        width:44px;height:24px;border-radius:12px;background:#333;cursor:pointer;
+        position:relative;transition:background .3s;border:2px solid rgba(255,255,255,.2);margin-left:.3rem
+      ">
+        <div id="ludo-ai-knob" style="
+          width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;
+          top:1px;left:1px;transition:left .3s;box-shadow:0 2px 6px rgba(0,0,0,.4)
+        "></div>
+      </div>
+      <span id="ludo-ai-label" style="font-size:.8rem;color:rgba(255,255,255,0.45)">Off</span>
+    </div>
+    <div style="display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center">
+      <button onclick="startLudoGame(2)" class="player-count-btn" style="--btn-color:#ff6b6b">
+        <span style="font-size:2rem">👥</span>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.6rem">2</span>
+        <span style="font-size:.8rem;color:rgba(255,255,255,0.7)">Players</span>
+        <div class="pcb-dots">
+          <span style="background:#e74c3c"></span>
+          <span style="background:#2980b9"></span>
+        </div>
+      </button>
+      <button onclick="startLudoGame(3)" class="player-count-btn" style="--btn-color:#6bcb77">
+        <span style="font-size:2rem">👥</span>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.6rem">3</span>
+        <span style="font-size:.8rem;color:rgba(255,255,255,0.7)">Players</span>
+        <div class="pcb-dots">
+          <span style="background:#e74c3c"></span>
+          <span style="background:#27ae60"></span>
+          <span style="background:#2980b9"></span>
+        </div>
+      </button>
+      <button onclick="startLudoGame(4)" class="player-count-btn" style="--btn-color:#4d96ff">
+        <span style="font-size:2rem">👥</span>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.6rem">4</span>
+        <span style="font-size:.8rem;color:rgba(255,255,255,0.7)">Players</span>
+        <div class="pcb-dots">
+          <span style="background:#e74c3c"></span>
+          <span style="background:#27ae60"></span>
+          <span style="background:#2980b9"></span>
+          <span style="background:#f39c12"></span>
+        </div>
+      </button>
+    </div>
+    <div style="color:rgba(255,255,255,0.35);font-size:.8rem;text-align:center;max-width:280px;line-height:1.6">
+      Race your tokens to the center!<br>Roll 6 to enter the board.<br><span id="ludo-ai-hint" style="color:rgba(107,203,119,0.0);transition:color .3s">You play Red 🔴 — AI plays all others</span>
+    </div>
+  </div>
+
+  <div class="game-content">
+    <div id="ludo-container">
+      <div id="ludo-info"></div>
+      <canvas id="ludo-board" width="560" height="560"></canvas>
+      <div id="ludo-dice-area">
+        <canvas id="ludo-dice" width="64" height="64" style="border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.4);cursor:pointer;" onclick="ludoRollDice()"></canvas>
+        <button class="roll-btn" id="ludo-roll-btn" onclick="ludoRollDice()">🎲 Roll Dice</button>
+      </div>
+    </div>
+  </div>
+  <div class="status-bar" id="ludo-status">Roll the dice to start!</div>
+</div>
+
+<!-- SNAKE SCREEN -->
+<div id="snake-screen" class="game-screen">
+  <div id="online-players-bar" style="display:none;padding:.3rem 1rem;background:rgba(77,150,255,0.1);border-bottom:1px solid rgba(77,150,255,0.2);font-size:.8rem;color:rgba(77,150,255,0.9);text-align:center;flex-shrink:0;">🌐 Online Room Active</div>
+  <div class="game-header">
+    <button class="back-btn" onclick="closeGame('snake')">← Back</button>
+    <span class="game-title">🐍 Snakes & Ladders</span>
+  </div>
+
+  <!-- Player Selection Overlay -->
+  <div id="snake-player-select" style="
+    position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2rem;
+    background:linear-gradient(135deg,rgba(0,26,10,0.97),rgba(0,51,32,0.97));
+    backdrop-filter:blur(8px);
+  ">
+    <div style="text-align:center">
+      <div style="font-size:4rem;margin-bottom:.5rem">🐍</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:2.4rem;
+        background:linear-gradient(90deg,#6bcb77,#ffd93d,#4d96ff,#ff6b6b);
+        -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+        Snakes & Ladders
+      </div>
+      <div style="color:rgba(255,255,255,0.6);font-size:1rem;margin-top:.4rem;letter-spacing:1px;">
+        How many players?
+      </div>
+    </div>
+    <!-- AI Mode Toggle for Snake -->
+    <div style="display:flex;align-items:center;gap:.8rem;background:rgba(255,255,255,0.07);padding:.6rem 1.2rem;border-radius:50px;border:1px solid rgba(255,255,255,0.12)">
+      <span style="font-size:1.2rem">🤖</span>
+      <span style="font-size:.9rem;font-weight:700;color:rgba(255,255,255,0.8)">Play vs AI</span>
+      <div id="snake-ai-toggle" onclick="toggleSnakeAI()" style="
+        width:44px;height:24px;border-radius:12px;background:#333;cursor:pointer;
+        position:relative;transition:background .3s;border:2px solid rgba(255,255,255,.2);margin-left:.3rem
+      ">
+        <div id="snake-ai-knob" style="
+          width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;
+          top:1px;left:1px;transition:left .3s;box-shadow:0 2px 6px rgba(0,0,0,.4)
+        "></div>
+      </div>
+      <span id="snake-ai-label" style="font-size:.8rem;color:rgba(255,255,255,0.45)">Off</span>
+    </div>
+    <div style="display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center">
+      <button onclick="startSnakeGame(2)" class="player-count-btn" style="--btn-color:#6bcb77">
+        <span style="font-size:2rem">👥</span>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.6rem">2</span>
+        <span style="font-size:.8rem;color:rgba(255,255,255,0.7)">Players</span>
+        <div class="pcb-dots">
+          <span style="background:#c0392b"></span>
+          <span style="background:#27ae60"></span>
+        </div>
+      </button>
+      <button onclick="startSnakeGame(3)" class="player-count-btn" style="--btn-color:#ffd93d">
+        <span style="font-size:2rem">👥</span>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.6rem">3</span>
+        <span style="font-size:.8rem;color:rgba(255,255,255,0.7)">Players</span>
+        <div class="pcb-dots">
+          <span style="background:#c0392b"></span>
+          <span style="background:#27ae60"></span>
+          <span style="background:#2471a3"></span>
+        </div>
+      </button>
+      <button onclick="startSnakeGame(4)" class="player-count-btn" style="--btn-color:#4d96ff">
+        <span style="font-size:2rem">👥</span>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.6rem">4</span>
+        <span style="font-size:.8rem;color:rgba(255,255,255,0.7)">Players</span>
+        <div class="pcb-dots">
+          <span style="background:#c0392b"></span>
+          <span style="background:#27ae60"></span>
+          <span style="background:#2471a3"></span>
+          <span style="background:#d4ac0d"></span>
+        </div>
+      </button>
+    </div>
+    <div style="color:rgba(255,255,255,0.35);font-size:.8rem;text-align:center;max-width:280px;line-height:1.6">
+      Climb the ladders, dodge the snakes!<br>First to reach 100 wins.<br><span id="snake-ai-hint" style="color:rgba(107,203,119,0);transition:color .3s">You are Player 1 🔴 — AI plays all others</span>
+    </div>
+  </div>
+
+  <div class="game-content">
+    <div id="snake-container">
+      <div id="snake-info"></div>
+      <canvas id="snake-board" width="540" height="540"></canvas>
+      <div id="snake-dice-area">
+        <canvas id="snake-dice" width="64" height="64" style="border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.4);cursor:pointer;" onclick="snakeRollDice()"></canvas>
+        <button class="roll-btn" id="snake-roll-btn" onclick="snakeRollDice()">🎲 Roll Dice</button>
+      </div>
+    </div>
+  </div>
+  <div class="status-bar" id="snake-status">Roll the dice to start!</div>
+</div>
+
+<!-- CHESS SCREEN -->
+<div id="chess-screen" class="game-screen">
+  <div id="online-players-bar" style="display:none;padding:.3rem 1rem;background:rgba(77,150,255,0.1);border-bottom:1px solid rgba(77,150,255,0.2);font-size:.8rem;color:rgba(77,150,255,0.9);text-align:center;flex-shrink:0;">🌐 Online Room Active</div>
+  <div class="game-header">
+    <button class="back-btn" onclick="closeGame('chess')">← Back</button>
+    <span class="game-title">♟️ Chess</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:.7rem">
+      <label style="font-size:.85rem;color:rgba(255,255,255,0.7);font-weight:700">vs AI</label>
+      <div id="ai-toggle" onclick="toggleAI()" style="
+        width:48px;height:26px;border-radius:13px;background:#333;cursor:pointer;
+        position:relative;transition:background .3s;border:2px solid rgba(255,255,255,.2)
+      ">
+        <div id="ai-toggle-knob" style="
+          width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;
+          top:1px;left:1px;transition:left .3s;box-shadow:0 2px 6px rgba(0,0,0,.4)
+        "></div>
+      </div>
+    </div>
+  </div>
+  <div class="game-content">
+    <div id="chess-container">
+      <div id="chess-status">White's Turn</div>
+      <div id="ai-thinking" style="display:none;text-align:center;padding:.4rem 1rem;
+        background:rgba(255,217,61,.12);border:1px solid rgba(255,217,61,.3);
+        border-radius:50px;font-size:.85rem;color:#ffd93d;margin-bottom:.3rem;
+        animation:pulse 1s ease-in-out infinite;">
+        🤖 AI is thinking...
+      </div>
+      <canvas id="chess-board" width="720" height="720"></canvas>
+      <div id="chess-controls">
+        <button class="chess-btn" onclick="initChess()">🔄 New Game</button>
+        <button class="chess-btn" onclick="chessUndoMove()">↩ Undo</button>
+      </div>
+    </div>
+  </div>
+  <div class="status-bar" id="chess-status-bar">Click a piece to select, then click destination</div>
+</div>
+
+<!-- CARROM SCREEN -->
+<div id="carrom-screen" class="game-screen">
+  <div id="online-players-bar" style="display:none;padding:.3rem 1rem;background:rgba(77,150,255,0.1);border-bottom:1px solid rgba(77,150,255,0.2);font-size:.8rem;color:rgba(77,150,255,0.9);text-align:center;flex-shrink:0;">🌐 Online Room Active</div>
+  <div class="game-header">
+    <button class="back-btn" onclick="closeGame('carrom')">← Back</button>
+    <span class="game-title">🎯 Carrom</span>
+  </div>
+
+  <!-- Carrom Player Selection Overlay -->
+  <div id="carrom-player-select" style="
+    position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2rem;
+    background:linear-gradient(135deg,rgba(0,10,32,0.97),rgba(0,16,64,0.97));
+    backdrop-filter:blur(8px);
+  ">
+    <div style="text-align:center">
+      <div style="font-size:4rem;margin-bottom:.5rem">🎯</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:2.4rem;
+        background:linear-gradient(90deg,#4d96ff,#c77dff,#ffd93d,#6bcb77);
+        -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+        Carrom
+      </div>
+      <div style="color:rgba(255,255,255,0.6);font-size:1rem;margin-top:.4rem;letter-spacing:1px;">
+        How many players?
+      </div>
+    </div>
+    <!-- AI Mode Toggle for Carrom -->
+    <div style="display:flex;align-items:center;gap:.8rem;background:rgba(255,255,255,0.07);padding:.6rem 1.2rem;border-radius:50px;border:1px solid rgba(255,255,255,0.12)">
+      <span style="font-size:1.2rem">🤖</span>
+      <span style="font-size:.9rem;font-weight:700;color:rgba(255,255,255,0.8)">Play vs AI</span>
+      <div id="carrom-ai-toggle" onclick="toggleCarromAI()" style="
+        width:44px;height:24px;border-radius:12px;background:#333;cursor:pointer;
+        position:relative;transition:background .3s;border:2px solid rgba(255,255,255,.2);margin-left:.3rem
+      ">
+        <div id="carrom-ai-knob" style="
+          width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;
+          top:1px;left:1px;transition:left .3s;box-shadow:0 2px 6px rgba(0,0,0,.4)
+        "></div>
+      </div>
+      <span id="carrom-ai-label" style="font-size:.8rem;color:rgba(255,255,255,0.45)">Off</span>
+    </div>
+    <div style="display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center">
+      <button onclick="startCarromGame(2)" class="player-count-btn" style="--btn-color:#4d96ff">
+        <span style="font-size:2rem">👥</span>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.6rem">2</span>
+        <span style="font-size:.8rem;color:rgba(255,255,255,0.7)">Players</span>
+        <div class="pcb-dots">
+          <span style="background:#e74c3c"></span>
+          <span style="background:#2980b9"></span>
+        </div>
+      </button>
+      <button onclick="startCarromGame(3)" class="player-count-btn" style="--btn-color:#c77dff">
+        <span style="font-size:2rem">👥</span>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.6rem">3</span>
+        <span style="font-size:.8rem;color:rgba(255,255,255,0.7)">Players</span>
+        <div class="pcb-dots">
+          <span style="background:#e74c3c"></span>
+          <span style="background:#2980b9"></span>
+          <span style="background:#27ae60"></span>
+        </div>
+      </button>
+      <button onclick="startCarromGame(4)" class="player-count-btn" style="--btn-color:#ffd93d">
+        <span style="font-size:2rem">👥</span>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.6rem">4</span>
+        <span style="font-size:.8rem;color:rgba(255,255,255,0.7)">Players</span>
+        <div class="pcb-dots">
+          <span style="background:#e74c3c"></span>
+          <span style="background:#2980b9"></span>
+          <span style="background:#27ae60"></span>
+          <span style="background:#f39c12"></span>
+        </div>
+      </button>
+    </div>
+    <div style="color:rgba(255,255,255,0.35);font-size:.8rem;text-align:center;max-width:300px;line-height:1.6">
+      4 players: Each strikes from a different side!<br>Pocket pieces to score points.<br><span id="carrom-ai-hint" style="color:rgba(77,150,255,0);transition:color .3s">You are Player 1 (bottom) — AI plays others</span>
+    </div>
+  </div>
+
+  <div class="game-content">
+    <div id="carrom-container">
+      <div id="carrom-info"></div>
+      <canvas id="carrom-board" width="520" height="520"></canvas>
+      <div id="carrom-controls">
+        <div id="aim-display">Aim: Click on board to aim</div>
+        <label style="color:var(--muted);font-size:.9rem">Power:</label>
+        <input type="range" id="power-slider" min="1" max="10" value="5">
+        <button class="strike-btn" id="strike-btn" onclick="carromStrike()">Strike!</button>
+      </div>
+    </div>
+  </div>
+  <div class="status-bar" id="carrom-status">Click on the board to aim your striker</div>
+</div>
+
+<script>
+// ===== NAVIGATION =====
+function openGame(g){
+  document.getElementById('home').style.display='none';
+  document.getElementById(g+'-screen').classList.add('active');
+  if(g==='ludo'){ document.getElementById('ludo-player-select').style.display='flex'; }
+  else if(g==='snake'){ document.getElementById('snake-player-select').style.display='flex'; }
+  else if(g==='chess') initChess();
+  else if(g==='carrom'){ document.getElementById('carrom-player-select').style.display='flex'; }
+}
+
+function startLudoGame(n){
+  document.getElementById('ludo-player-select').style.display='none';
+  initLudo(n);
+}
+function startSnakeGame(n){
+  document.getElementById('snake-player-select').style.display='none';
+  initSnake(n);
+}
+function closeGame(g){
+  document.getElementById(g+'-screen').classList.remove('active');
+  document.getElementById('home').style.display='flex';
+  if(g==='ludo') document.getElementById('ludo-player-select').style.display='flex';
+  if(g==='snake') document.getElementById('snake-player-select').style.display='flex';
+  if(g==='carrom') document.getElementById('carrom-player-select').style.display='flex';
+}
+
+// =========================================================
+// ====================== LUDO GAME ========================
+// =========================================================
+
+// =========================================================
+// ====================== LUDO GAME ========================
+// =========================================================
+// Real 15x15 Ludo board
+// Cell size & board offset
+const CS = 36;       // cell size in px
+const BO = 2;        // board offset (border)
+const BW = 15*CS + BO*2; // board width = 542px
+
+// Colors
+const LUDO = {
+  COLORS: ['#e74c3c','#27ae60','#2980b9','#f39c12'],
+  NAMES:  ['Red','Green','Blue','Yellow'],
+  SAFE_CELLS: [1,9,14,22,27,35,40,48],
+  HOME_COLS:  ['#ffcccc','#ccffcc','#cce0ff','#fff3cc'],
+  HOME_DARK:  ['#e74c3c','#27ae60','#2980b9','#f39c12'],
+};
+// Returns display name with 🤖 tag for AI players
+function ludoName(playerIdx){
+  const isHuman = !ludoAIMode || playerIdx === ludoState.activePlayers[0];
+  return isHuman ? LUDO.NAMES[playerIdx] : `🤖 ${LUDO.NAMES[playerIdx]}`;
+}
+
+let ludoAIMode = false;
+function toggleLudoAI(){
+  ludoAIMode = !ludoAIMode;
+  const knob=document.getElementById('ludo-ai-knob');
+  const tog=document.getElementById('ludo-ai-toggle');
+  const lbl=document.getElementById('ludo-ai-label');
+  const hint=document.getElementById('ludo-ai-hint');
+  if(ludoAIMode){
+    tog.style.background='#ff6b6b'; knob.style.left='22px';
+    lbl.textContent='On'; hint.style.color='rgba(107,203,119,0.8)';
+  } else {
+    tog.style.background='#333'; knob.style.left='1px';
+    lbl.textContent='Off'; hint.style.color='rgba(107,203,119,0)';
+  }
+}
+let ludoState = {};
+
+// Build the 52-step path as [col,row] in the 15x15 grid
+// Standard Ludo path (0-indexed grid, origin top-left)
+// Red starts at col6,row13 going up; Green at col1,row6 going right;
+// Blue at col8,row1 going down; Yellow at col13,row8 going left.
+// Path is 52 steps, each player offset by 13.
+const LUDO_GRID_PATH = (function(){
+  const path = [];
+  // Red's path (starts bottom-left area, goes anti-clockwise... actually standard goes:
+  // Each color's path is a rotation. We define absolute 52 cells.
+  // Standard Ludo 15x15 grid path (col, row):
+  const p = [
+    // bottom-left vertical strip going UP (col6, rows 14..9) -- 6 cells
+    [6,14],[6,13],[6,12],[6,11],[6,10],[6,9],
+    // row8 going RIGHT (cols 6..8) -- home stretch entry col then right -- 3 cells
+    [6,8],[7,8],[8,8],   // skip -- actually standard:
+    // We'll use a clean direct path:
+  ];
+  // Clean standard path (col,row) for all 52 steps, player 0 (Red) perspective:
+  // Segment 1: col6, row14 -> row9 (going up, 6 cells)
+  for(let r=14;r>=9;r--) path.push([6,r]);
+  // Segment 2: row8, col6 -> col1 (going left, hmm no)
+  // Let me use the real standard ludo path:
+  // Red: starts at (6,13) enters at (6,2) finishes at home column
+  // I'll define it properly:
+  path.length = 0;
+  // Red start area: left column going up
+  for(let r=13;r>=2;r--) if(r!==7&&r!==8) path.push([6,r]); // skip center rows
+  // Nope, let's just hardcode the 52 cells properly.
+  path.length = 0;
+  const raw = [
+    // Left side going up (red's starting stretch)
+    [6,13],[6,12],[6,11],[6,10],[6,9],
+    // top-left corner going right
+    [6,8],[5,8],[4,8],[3,8],[2,8],[1,8],
+    // top going up then right across top
+    [1,7],[1,6],
+    [2,6],[3,6],[4,6],[5,6],[6,6],
+    // top side going right on row6... going up col6
+    [6,5],[6,4],[6,3],[6,2],[6,1],
+    // top-right
+    [7,1],[8,1],
+    [8,2],[8,3],[8,4],[8,5],[8,6],
+    // right side going right on row6
+    [9,6],[10,6],[11,6],[12,6],[13,6],
+    [13,7],[13,8],
+    [12,8],[11,8],[10,8],[9,8],[8,8],
+    [8,9],[8,10],[8,11],[8,12],[8,13],
+    [7,13],[6,13]  // closes but we need 52 unique
+  ];
+  // Build proper 52-step closed loop
+  path.length = 0;
+  const segments = [
+    // Red's home column entry is col7 rows 13..8 (going up)
+    // Global board path (52 cells, clockwise starting from Red's start)
+    // Segment going UP left col (red start)
+    ...[[6,13],[6,12],[6,11],[6,10],[6,9]],
+    // Turn left, go LEFT on row8
+    ...[[5,8],[4,8],[3,8],[2,8],[1,8]],
+    // Turn up, go UP col1
+    ...[[1,7],[1,6]],
+    // Turn right, go RIGHT on row6
+    ...[[2,6],[3,6],[4,6],[5,6],[6,6],[6,5],[6,4],[6,3],[6,2],[6,1]],
+    // Turn right to col7,8
+    ...[[7,1],[8,1]],
+    // go DOWN col8 going down on right side
+    ...[[8,2],[8,3],[8,4],[8,5],[8,6]],
+    // go RIGHT on row6 right side
+    ...[[9,6],[10,6],[11,6],[12,6],[13,6]],
+    // go down to row7,8
+    ...[[13,7],[13,8]],
+    // go LEFT on row8 right side
+    ...[[12,8],[11,8],[10,8],[9,8],[8,8]],
+    // go DOWN col8 bottom
+    ...[[8,9],[8,10],[8,11],[8,12],[8,13]],
+    // go left to col7,6
+    ...[[7,13],[6,13]],
+  ];
+  return segments.slice(0,52);
+})();
+
+// Convert grid [col,row] to canvas pixel center
+function cellPx(col, row){
+  return { x: BO + col*CS + CS/2, y: BO + row*CS + CS/2 };
+}
+
+// Get board pixel for player p at step pos (0-51)
+function ludoBoardCell(player, pos){
+  const offset = (pos + player * 13) % 52;
+  const [col, row] = LUDO_GRID_PATH[offset] || LUDO_GRID_PATH[0];
+  return cellPx(col, row);
+}
+
+// Home yard positions for each player's 4 tokens inside their colored quadrant
+function ludoHomePos(player, ti){
+  // Quadrant top-left corners (in cells): Red=top-left, Green=top-right, Blue=bottom-right, Yellow=bottom-left
+  const qx = [0, 9, 9, 0];
+  const qy = [0, 0, 9, 9];
+  const ox = [1,2,1,2];
+  const oy = [1,1,2,2];
+  return cellPx(qx[player]+ox[ti%2===0?0:1], qy[player]+oy[Math.floor(ti/2)===0?0:1]);
+}
+
+// Home stretch paths (each player's 5-step home column leading to center)
+function ludoHomeStretch(player, step){
+  // step 0-4: 5 cells leading to center
+  const paths = [
+    [[7,13],[7,12],[7,11],[7,10],[7,9],[7,8]], // Red: col7 going up → center row8
+    [[1,7],[2,7],[3,7],[4,7],[5,7],[6,7]],     // Green: row7 going right → center col6
+    [[7,1],[7,2],[7,3],[7,4],[7,5],[7,6]],     // Blue: col7 going down → center row6
+    [[13,7],[12,7],[11,7],[10,7],[9,7],[8,7]], // Yellow: row7 going left → center col8
+  ];
+  const [col,row] = paths[player][step];
+  return cellPx(col, row);
+}
+
+function initLudo(numPlayers){
+  numPlayers = numPlayers || 4;
+  // For 2 players: Red (0) + Blue (2); For 3: Red+Green+Blue (0,1,2); For 4: all
+  // We map selected count to player indices
+  const playerMap = {
+    2: [0, 2],       // Red, Blue (opposite corners)
+    3: [0, 1, 2],    // Red, Green, Blue
+    4: [0, 1, 2, 3], // all
+  };
+  const activePlayers = playerMap[numPlayers] || [0,1,2,3];
+  const s = ludoState = {
+    players: numPlayers,
+    activePlayers: activePlayers,
+    currentPlayerIdx: 0, // index into activePlayers
+    get currentPlayer(){ return this.activePlayers[this.currentPlayerIdx]; },
+    diceVal:0, rolled:false,
+    tokens:[], scores:[0,0,0,0],
+  };
+  s.tokens = [
+    [{pos:-1},{pos:-1},{pos:-1},{pos:-1}],
+    [{pos:-1},{pos:-1},{pos:-1},{pos:-1}],
+    [{pos:-1},{pos:-1},{pos:-1},{pos:-1}],
+    [{pos:-1},{pos:-1},{pos:-1},{pos:-1}],
+  ];
+  // Resize canvas to board width
+  const canvas = document.getElementById('ludo-board');
+  canvas.width = BW; canvas.height = BW;
+  updateLudoInfo();
+  drawLudo();
+  initDiceCanvas('ludo-dice');
+  const cpName = LUDO.NAMES[s.currentPlayer];
+  document.getElementById('ludo-status').textContent = `${cpName} player: Roll the dice!`;
+  document.getElementById('ludo-roll-btn').disabled = false;
+}
+
+function updateLudoInfo(){
+  const info = document.getElementById('ludo-info');
+  const cp = ludoState.currentPlayer;
+  info.innerHTML = ludoState.activePlayers.map(i=>`
+    <div class="ludo-player-info ${cp===i?'active-turn':''}"
+         style="--player-color:${LUDO.COLORS[i]};border-color:${cp===i?LUDO.COLORS[i]:'transparent'}">
+      <span style="color:${LUDO.COLORS[i]}">●</span> ${ludoName(i)}: ${ludoState.scores[i]}/4 done
+    </div>`).join('');
+}
+
+// =========================================================
+// =================== DICE ENGINE ========================
+// =========================================================
+
+const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅']; // kept for legacy
+
+// Dot positions for each face value [cx%, cy%] pairs
+const DICE_DOTS = {
+  1: [[50,50]],
+  2: [[25,25],[75,75]],
+  3: [[25,25],[50,50],[75,75]],
+  4: [[25,25],[75,25],[25,75],[75,75]],
+  5: [[25,25],[75,25],[50,50],[25,75],[75,75]],
+  6: [[25,20],[75,20],[25,50],[75,50],[25,80],[75,80]],
+};
+
+function drawDiceCanvas(canvasId, value, angle, shake){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  ctx.save();
+  ctx.translate(W/2, H/2);
+  if(angle) ctx.rotate(angle);
+  if(shake){
+    ctx.translate(
+      (Math.random()-0.5)*6,
+      (Math.random()-0.5)*6
+    );
+  }
+
+  const S = W * 0.82;
+  const R = S * 0.16; // corner radius
+
+  // Shadow
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = 'rgba(0,0,0,0.55)';
+  ctx.shadowOffsetY = 4;
+
+  // Wooden dice body — warm maple gradient
+  const bodyGrad = ctx.createLinearGradient(-S/2, -S/2, S/2, S/2);
+  bodyGrad.addColorStop(0,   '#f5e8c0');
+  bodyGrad.addColorStop(0.35,'#e8d090');
+  bodyGrad.addColorStop(0.7, '#c8a850');
+  bodyGrad.addColorStop(1,   '#a07830');
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  ctx.roundRect(-S/2, -S/2, S, S, R);
+  ctx.fill();
+  ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+  // Top-face sheen
+  const sheenGrad = ctx.createLinearGradient(-S/2, -S/2, S*0.1, S*0.1);
+  sheenGrad.addColorStop(0, 'rgba(255,255,240,0.45)');
+  sheenGrad.addColorStop(1, 'rgba(255,255,240,0)');
+  ctx.fillStyle = sheenGrad;
+  ctx.beginPath();
+  ctx.roundRect(-S/2, -S/2, S, S, R);
+  ctx.fill();
+
+  // Wood grain lines
+  ctx.save();
+  ctx.globalAlpha = 0.08;
+  ctx.strokeStyle = '#7a5010';
+  ctx.lineWidth = 1;
+  for(let g = -3; g <= 3; g++){
+    ctx.beginPath();
+    ctx.moveTo(-S/2, g * S/7);
+    ctx.lineTo(S/2,  g * S/7 + S*0.06);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Border
+  ctx.strokeStyle = '#8b6010';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(-S/2, -S/2, S, S, R);
+  ctx.stroke();
+
+  // Inner thin border
+  ctx.strokeStyle = 'rgba(200,160,60,0.5)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.roundRect(-S/2+3, -S/2+3, S-6, S-6, R*0.7);
+  ctx.stroke();
+
+  // Draw dots
+  if(value && DICE_DOTS[value]){
+    DICE_DOTS[value].forEach(([cx, cy]) => {
+      const dx = (cx/100 - 0.5) * S * 0.78;
+      const dy = (cy/100 - 0.5) * S * 0.78;
+      const dr = S * 0.095;
+
+      // Dot shadow (engraved look)
+      ctx.fillStyle = 'rgba(80,50,10,0.5)';
+      ctx.beginPath(); ctx.arc(dx+1, dy+1.5, dr, 0, Math.PI*2); ctx.fill();
+
+      // Dot body — dark wood engraving
+      const dotGrad = ctx.createRadialGradient(dx-dr*0.3, dy-dr*0.3, 0, dx, dy, dr);
+      dotGrad.addColorStop(0, '#2a1a06');
+      dotGrad.addColorStop(0.7, '#1a0e04');
+      dotGrad.addColorStop(1, '#0e0804');
+      ctx.fillStyle = dotGrad;
+      ctx.beginPath(); ctx.arc(dx, dy, dr, 0, Math.PI*2); ctx.fill();
+
+      // Dot sheen
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';
+      ctx.beginPath(); ctx.arc(dx - dr*0.28, dy - dr*0.28, dr*0.35, 0, Math.PI*2); ctx.fill();
+    });
+  }
+
+  ctx.restore();
+}
+
+// Animate dice rolling — shuffles faces rapidly then lands on final value
+function animateDice(canvasId, finalValue, onDone){
+  const totalFrames = 22;
+  const fps = 60;
+  let frame = 0;
+
+  function step(){
+    frame++;
+    const progress = frame / totalFrames;
+    // Easing: fast shake → slow settle
+    const shake = progress < 0.75;
+    const angle = shake
+      ? (Math.random() - 0.5) * 0.55 * (1 - progress)
+      : 0;
+    const showVal = shake
+      ? Math.floor(Math.random()*6)+1
+      : finalValue;
+
+    drawDiceCanvas(canvasId, showVal, angle, shake);
+
+    if(frame < totalFrames){
+      setTimeout(step, shake ? 55 : 90);
+    } else {
+      drawDiceCanvas(canvasId, finalValue, 0, false);
+      if(onDone) onDone();
+    }
+  }
+  step();
+}
+
+// Draw idle dice (face 1) on init
+function initDiceCanvas(canvasId){
+  drawDiceCanvas(canvasId, 1, 0, false);
+}
+
+
+function ludoRollDice(){
+  if(ludoState.rolled) return;
+  const val = Math.floor(Math.random()*6)+1;
+  ludoState.diceVal = val;
+  ludoState.rolled = true;
+  document.getElementById('ludo-roll-btn').disabled = true;
+
+  animateDice('ludo-dice', val, ()=>{
+    const cp = ludoState.currentPlayer;
+    const tokens = ludoState.tokens[cp];
+    const canMove = tokens.some(t=>{
+      if(t.pos === -1) return val === 6;
+      if(t.pos >= 200) return false;
+      if(t.pos >= 100){ const step = t.pos-100; return step+val <= 5; }
+      return true;
+    });
+    if(!canMove){
+      document.getElementById('ludo-status').textContent = `${LUDO.NAMES[cp]} rolled ${val} -- No moves! Turn passes.`;
+      setTimeout(()=>ludoNextTurn(true), 900);
+    } else {
+      document.getElementById('ludo-status').textContent = `${LUDO.NAMES[cp]} rolled ${val} -- Click a token!`;
+      document.getElementById('ludo-board').onclick = ludoTokenClick;
+      document.getElementById('ludo-board').ontouchend = ludoTokenClick;
+    }
+    drawLudo();
+  });
+}
+
+// Unified pointer→canvas coords for both mouse and touch
+function ludoGetCanvasXY(e){
+  const canvas = document.getElementById('ludo-board');
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  let clientX, clientY;
+  if(e.touches && e.touches.length > 0){
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+  } else if(e.changedTouches && e.changedTouches.length > 0){
+    clientX = e.changedTouches[0].clientX;
+    clientY = e.changedTouches[0].clientY;
+  } else {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  }
+  return { mx: (clientX - rect.left) * scaleX, my: (clientY - rect.top) * scaleY };
+}
+
+function ludoTokenClick(e){
+  if(e.cancelable) e.preventDefault();
+  const { mx, my } = ludoGetCanvasXY(e);
+  const canvas = document.getElementById('ludo-board');
+  const cp = ludoState.currentPlayer;
+  const tokens = ludoState.tokens[cp];
+  const val = ludoState.diceVal;
+
+  // Hit radius: large enough for comfortable finger tap
+  const HIT = CS * 1.4;
+
+  // Find the closest valid token within hit radius
+  let bestDist = Infinity, bestTi = -1;
+  for(let ti=0;ti<4;ti++){
+    const t = tokens[ti];
+    let px, py;
+    if(t.pos === -1){
+      const hp = ludoTokenSlotPos(cp,ti); px=hp.x; py=hp.y;
+    } else if(t.pos >= 200){ continue; }
+    else if(t.pos >= 100){
+      const step = t.pos-100;
+      const sp = ludoHomeStretch(cp,step); px=sp.x; py=sp.y;
+    } else {
+      const bp = ludoBoardCell(cp,t.pos);
+      px=bp.x+(ti%2===0?-5:5); py=bp.y+(ti<2?-5:5);
+    }
+    const dist = Math.hypot(mx-px, my-py);
+    if(dist < HIT && dist < bestDist){
+      // Check this token is actually moveable
+      if(t.pos === -1 && val !== 6) continue;
+      if(t.pos >= 100){
+        const step = t.pos-100;
+        if(step+val > 5) continue;
+      }
+      if(t.pos >= 0 && t.pos < 100){
+        const newPos = t.pos + val;
+        if(newPos >= 52){
+          const overflow = newPos - 52;
+          if(overflow > 5) continue;
+        }
+      }
+      bestDist = dist;
+      bestTi = ti;
+    }
+  }
+
+  if(bestTi === -1) return; // no valid token tapped
+
+  // Move the best matched token
+  const t = tokens[bestTi];
+  if(t.pos === -1 && val === 6){
+    t.pos = 0;
+    document.getElementById('ludo-status').textContent = `${LUDO.NAMES[cp]} enters the board!`;
+  } else if(t.pos >= 100){
+    const step = t.pos - 100;
+    t.pos = 100 + step + val;
+    if(t.pos === 105){
+      t.pos = 200; ludoState.scores[cp]++;
+      document.getElementById('ludo-status').textContent = `${LUDO.NAMES[cp]} token HOME! 🎉`;
+      if(ludoState.scores[cp] === 4){
+        document.getElementById('ludo-status').textContent = `🏆 ${LUDO.NAMES[cp]} WINS!`;
+        canvas.onclick = null; canvas.ontouchend = null;
+        drawLudo(); updateLudoInfo(); return;
+      }
+    }
+  } else if(t.pos >= 0){
+    const newPos = t.pos + val;
+    if(newPos >= 52){
+      const overflow = newPos - 52;
+      t.pos = 100 + overflow;
+    } else {
+      t.pos = newPos;
+      ludoCheckCapture(cp, newPos);
+    }
+  }
+  drawLudo(); updateLudoInfo();
+  canvas.onclick = null; canvas.ontouchend = null;
+  setTimeout(()=>ludoNextTurn(val !== 6), 500);
+}
+
+function ludoCheckCapture(cp, pos){
+  for(let p of ludoState.activePlayers){
+    if(p===cp) continue;
+    for(let t of ludoState.tokens[p]){
+      if(t.pos<0||t.pos>=52) continue;
+      const myAbs = ludoRelToAbs(cp,pos);
+      const theirAbs = ludoRelToAbs(p,t.pos);
+      if(myAbs===theirAbs && !LUDO.SAFE_CELLS.includes(myAbs)){
+        t.pos = -1;
+        document.getElementById('ludo-status').textContent = `${LUDO.NAMES[cp]} captured ${LUDO.NAMES[p]}!`;
+      }
+    }
+  }
+}
+function ludoRelToAbs(p,pos){ return (pos + p*13) % 52; }
+
+function ludoNextTurn(pass){
+  if(pass) ludoState.currentPlayerIdx = (ludoState.currentPlayerIdx+1) % ludoState.activePlayers.length;
+  ludoState.rolled = false; ludoState.diceVal = 0;
+  initDiceCanvas('ludo-dice');
+  const cp = ludoState.currentPlayer;
+  updateLudoInfo(); drawLudo();
+  if(ludoAIMode && cp !== ludoState.activePlayers[0]){
+    // AI turn
+    document.getElementById('ludo-roll-btn').disabled = true;
+    document.getElementById('ludo-status').textContent = `🤖 ${LUDO.NAMES[cp]} (AI) is thinking...`;
+    setTimeout(()=>{
+      const val = Math.floor(Math.random()*6)+1;
+      ludoState.diceVal = val; ludoState.rolled = true;
+      animateDice('ludo-dice', val, ()=>{
+        document.getElementById('ludo-status').textContent = `🤖 ${LUDO.NAMES[cp]} (AI) rolled ${val}`;
+        const canMove = ludoState.tokens[cp].some(t=>{
+          if(t.pos===-1) return val===6;
+          if(t.pos>=200) return false;
+          if(t.pos>=100){ const step=t.pos-100; return step+val<=5; }
+          return true;
+        });
+        if(!canMove){
+          document.getElementById('ludo-status').textContent=`🤖 ${LUDO.NAMES[cp]} (AI) rolled ${val} — No moves!`;
+          setTimeout(()=>ludoNextTurn(true),900);
+        } else {
+          // AI picks best token
+          const tokens=ludoState.tokens[cp];
+          const moveable=[];
+          for(let ti=0;ti<4;ti++){
+            const t=tokens[ti];
+            if(t.pos===-1&&val===6) moveable.push({ti,priority:5});
+            else if(t.pos>=200) continue;
+            else if(t.pos>=100){ const step=t.pos-100; if(step+val<=5) moveable.push({ti,priority:10+step}); }
+            else if(t.pos>=0){
+              const newPos=t.pos+val;
+              if(newPos>=52){ if((newPos-52)<=5) moveable.push({ti,priority:8+t.pos}); }
+              else moveable.push({ti,priority:t.pos});
+            }
+          }
+          if(!moveable.length){ setTimeout(()=>ludoNextTurn(true),900); return; }
+          moveable.sort((a,b)=>b.priority-a.priority);
+          const ti=moveable[0].ti;
+          const t=tokens[ti];
+          setTimeout(()=>{
+            if(t.pos===-1&&val===6){
+              t.pos=0;
+              document.getElementById('ludo-status').textContent=`🤖 ${LUDO.NAMES[cp]} (AI) enters the board!`;
+            } else if(t.pos>=100){
+              const step=t.pos-100; t.pos=100+step+val;
+              if(t.pos===105){ t.pos=200; ludoState.scores[cp]++;
+                document.getElementById('ludo-status').textContent=`🤖 ${LUDO.NAMES[cp]} (AI) token HOME! 🎉`;
+                if(ludoState.scores[cp]===4){ document.getElementById('ludo-status').textContent=`🏆 ${LUDO.NAMES[cp]} (AI) WINS!`; drawLudo(); updateLudoInfo(); return; }
+              }
+            } else if(t.pos>=0){
+              const newPos=t.pos+val;
+              if(newPos>=52){ t.pos=100+(newPos-52); } else { t.pos=newPos; ludoCheckCapture(cp,newPos); }
+            }
+            drawLudo(); updateLudoInfo();
+            setTimeout(()=>ludoNextTurn(val!==6),500);
+          },700);
+        }
+      });
+    },600);
+  } else {
+    document.getElementById('ludo-roll-btn').disabled = false;
+    document.getElementById('ludo-status').textContent = `${LUDO.NAMES[cp]}'s turn — Roll the dice!`;
+  }
+}
+
+// ---- DRAW LUDO (Premium Neon Dark board) ----
+function drawLudo(){
+  const canvas = document.getElementById('ludo-board');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // === PREMIUM DARK BOARD BACKGROUND ===
+  const bgGrad = ctx.createRadialGradient(W/2,H/2,20,W/2,H/2,W*0.75);
+  bgGrad.addColorStop(0,'#1a0d3a');
+  bgGrad.addColorStop(0.5,'#120828');
+  bgGrad.addColorStop(1,'#0a0418');
+  ctx.fillStyle=bgGrad;
+  ctx.roundRect(0,0,W,H,14);ctx.fill();
+
+  // Subtle grid shimmer overlay
+  ctx.save();ctx.globalAlpha=0.03;
+  for(let i=0;i<W;i+=4){ctx.fillStyle='#8855ff';ctx.fillRect(i,0,1,H);}
+  for(let i=0;i<H;i+=4){ctx.fillStyle='#8855ff';ctx.fillRect(0,i,W,1);}
+  ctx.restore();
+
+  // Neon glow corner accents
+  const cornerGlows=[
+    {x:BO+CS*3,y:BO+CS*3,color:'rgba(255,60,60,0.12)'},
+    {x:BO+CS*12,y:BO+CS*3,color:'rgba(60,220,100,0.12)'},
+    {x:BO+CS*12,y:BO+CS*12,color:'rgba(60,140,255,0.12)'},
+    {x:BO+CS*3,y:BO+CS*12,color:'rgba(255,210,30,0.12)'},
+  ];
+  cornerGlows.forEach(g=>{
+    const rg=ctx.createRadialGradient(g.x,g.y,10,g.x,g.y,CS*4);
+    rg.addColorStop(0,g.color.replace('0.12','0.35'));
+    rg.addColorStop(1,'transparent');
+    ctx.fillStyle=rg;ctx.fillRect(0,0,W,H);
+  });
+
+  // ---- Draw all 15x15 cells ----
+  const safeGridCells = [[6,2],[2,6],[6,12],[12,8],[8,2],[12,6],[8,12],[2,8]];
+  for(let row=0;row<15;row++){
+    for(let col=0;col<15;col++){
+      const x = BO+col*CS, y = BO+row*CS;
+
+      // Quadrant base
+      let r=30,g=20,b=55; // default dark purple
+      if(col<=5&&row<=5){r=60;g=10;b=15;}        // Red zone — deep crimson
+      if(col>=9&&row<=5){r=10;g=55;b=20;}        // Green zone — deep emerald
+      if(col>=9&&row>=9){r=10;g=25;b=70;}        // Blue zone — deep sapphire
+      if(col<=5&&row>=9){r=60;g=48;b=5;}         // Yellow zone — deep gold
+
+      // Center area — neutral dark
+      if(col>=6&&col<=8&&row>=6&&row<=8){r=18;g=14;b=40;}
+
+      ctx.fillStyle=`rgb(${r},${g},${b})`;
+      ctx.fillRect(x,y,CS,CS);
+
+      // Subtle inner glow on quadrant cells
+      if(col<=5&&row<=5){
+        const qg=ctx.createRadialGradient(x+CS/2,y+CS/2,0,x+CS/2,y+CS/2,CS);
+        qg.addColorStop(0,'rgba(255,80,80,0.08)');qg.addColorStop(1,'transparent');
+        ctx.fillStyle=qg;ctx.fillRect(x,y,CS,CS);
+      }
+      if(col>=9&&row<=5){
+        const qg=ctx.createRadialGradient(x+CS/2,y+CS/2,0,x+CS/2,y+CS/2,CS);
+        qg.addColorStop(0,'rgba(80,255,130,0.08)');qg.addColorStop(1,'transparent');
+        ctx.fillStyle=qg;ctx.fillRect(x,y,CS,CS);
+      }
+      if(col>=9&&row>=9){
+        const qg=ctx.createRadialGradient(x+CS/2,y+CS/2,0,x+CS/2,y+CS/2,CS);
+        qg.addColorStop(0,'rgba(80,160,255,0.08)');qg.addColorStop(1,'transparent');
+        ctx.fillStyle=qg;ctx.fillRect(x,y,CS,CS);
+      }
+      if(col<=5&&row>=9){
+        const qg=ctx.createRadialGradient(x+CS/2,y+CS/2,0,x+CS/2,y+CS/2,CS);
+        qg.addColorStop(0,'rgba(255,210,30,0.08)');qg.addColorStop(1,'transparent');
+        ctx.fillStyle=qg;ctx.fillRect(x,y,CS,CS);
+      }
+
+      // Home lane overlays — glowing
+      if(col===7&&row>=8&&row<=12){
+        ctx.fillStyle='rgba(255,60,60,0.22)';ctx.fillRect(x,y,CS,CS);
+        ctx.fillStyle='rgba(255,100,100,0.08)';ctx.fillRect(x+2,y+2,CS-4,CS-4);
+      }
+      if(col===7&&row>=2&&row<=6){
+        ctx.fillStyle='rgba(60,220,100,0.22)';ctx.fillRect(x,y,CS,CS);
+      }
+      if(row===7&&col>=2&&col<=6){
+        ctx.fillStyle='rgba(60,220,100,0.22)';ctx.fillRect(x,y,CS,CS);
+      }
+      if(row===7&&col>=8&&col<=12){
+        ctx.fillStyle='rgba(255,210,30,0.22)';ctx.fillRect(x,y,CS,CS);
+      }
+
+      // Safe star cells — glowing emerald
+      const isSafe = safeGridCells.some(([c,rr])=>c===col&&rr===row);
+      if(isSafe){
+        ctx.fillStyle='rgba(0,255,140,0.18)';ctx.fillRect(x,y,CS,CS);
+        ctx.shadowColor='#00ff88';ctx.shadowBlur=8;
+        ctx.fillStyle='rgba(0,255,140,0.7)';
+        ctx.font=`${CS*0.48}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText('★',x+CS/2,y+CS/2);
+        ctx.shadowBlur=0;
+      }
+
+      // Neon cell border
+      ctx.strokeStyle='rgba(120,80,255,0.18)';ctx.lineWidth=0.7;
+      ctx.strokeRect(x,y,CS,CS);
+    }
+  }
+
+  // ---- Home Yards — Premium Neon ----
+  const yardDefs = [
+    {col:0,row:0, color:'#ff3c3c', glow:'rgba(255,60,60,0.6)', light:'rgba(255,80,80,0.25)'}, // Red
+    {col:9,row:0, color:'#27ee60', glow:'rgba(39,238,96,0.6)',  light:'rgba(60,220,100,0.25)'}, // Green
+    {col:9,row:9, color:'#2299ff', glow:'rgba(34,153,255,0.6)', light:'rgba(60,140,255,0.25)'}, // Blue
+    {col:0,row:9, color:'#ffd700', glow:'rgba(255,215,0,0.6)',  light:'rgba(255,210,30,0.25)'}, // Yellow
+  ];
+  yardDefs.forEach((yd,i)=>{
+    const isActive = !ludoState.activePlayers || ludoState.activePlayers.includes(i);
+    const col=yd.col,row=yd.row;
+    const cx = BO+col*CS+CS*3, cy = BO+row*CS+CS*3;
+
+    // Yard glow
+    if(isActive){
+      const yg=ctx.createRadialGradient(cx,cy,CS,cx,cy,CS*3.5);
+      yg.addColorStop(0,yd.glow.replace('0.6','0.15'));
+      yg.addColorStop(1,'transparent');
+      ctx.fillStyle=yg;ctx.fillRect(BO+col*CS,BO+row*CS,CS*6,CS*6);
+    }
+
+    // Yard border — neon glow
+    ctx.shadowColor=yd.color;ctx.shadowBlur=isActive?18:0;
+    ctx.strokeStyle=isActive?yd.color:'#444';ctx.lineWidth=2.5;
+    ctx.strokeRect(BO+col*CS+3,BO+row*CS+3,CS*6-6,CS*6-6);
+    ctx.shadowBlur=0;
+
+    // Big circle
+    const circGrad=ctx.createRadialGradient(cx-CS*0.5,cy-CS*0.5,CS*0.3,cx,cy,CS*2.2);
+    if(isActive){
+      circGrad.addColorStop(0,yd.color+'55');
+      circGrad.addColorStop(0.5,yd.color+'22');
+      circGrad.addColorStop(1,yd.color+'08');
+    } else {
+      circGrad.addColorStop(0,'#33333355');circGrad.addColorStop(1,'#11111122');
+    }
+    ctx.fillStyle=circGrad;
+    ctx.beginPath();ctx.arc(cx,cy,CS*2.1,0,Math.PI*2);ctx.fill();
+
+    ctx.shadowColor=yd.color;ctx.shadowBlur=isActive?12:0;
+    ctx.strokeStyle=isActive?yd.color+'99':'#555';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(cx,cy,CS*2.1,0,Math.PI*2);ctx.stroke();
+    ctx.shadowBlur=0;
+
+    if(!isActive){
+      ctx.fillStyle='rgba(0,0,0,0.5)';
+      ctx.beginPath();ctx.arc(cx,cy,CS*2.1,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,0.2)';
+      ctx.font=`bold ${CS*0.7}px Nunito`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText('✕',cx,cy);
+    }
+
+    // Token slots — glowing rings
+    const slotOffsets=[[-0.9,-0.9],[0.9,-0.9],[-0.9,0.9],[0.9,0.9]];
+    slotOffsets.forEach(([ox,oy])=>{
+      const sx=cx+ox*CS*0.85,sy=cy+oy*CS*0.85;
+      const sg=ctx.createRadialGradient(sx-CS*0.1,sy-CS*0.1,0,sx,sy,CS*0.55);
+      sg.addColorStop(0,isActive?yd.color+'44':'#44444433');
+      sg.addColorStop(1,isActive?yd.color+'11':'#11111111');
+      ctx.fillStyle=sg;
+      ctx.beginPath();ctx.arc(sx,sy,CS*0.55,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle=isActive?yd.color+'88':'#55555588';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(sx,sy,CS*0.55,0,Math.PI*2);ctx.stroke();
+    });
+  });
+
+  // ---- Center Triangles — glowing neon ----
+  const midX = BO+7*CS+CS/2, midY = BO+7*CS+CS/2;
+  const triColors = ['#ff3c3c','#27ee60','#2299ff','#ffd700'];
+  const triCorners = [
+    [[BO+6*CS,BO+6*CS],[BO+9*CS,BO+6*CS],[midX,midY]],
+    [[BO+9*CS,BO+6*CS],[BO+9*CS,BO+9*CS],[midX,midY]],
+    [[BO+9*CS,BO+9*CS],[BO+6*CS,BO+9*CS],[midX,midY]],
+    [[BO+6*CS,BO+9*CS],[BO+6*CS,BO+6*CS],[midX,midY]],
+  ];
+  triCorners.forEach((corners,i)=>{
+    ctx.shadowColor=triColors[i];ctx.shadowBlur=12;
+    ctx.fillStyle=triColors[i]+'55';
+    ctx.beginPath();ctx.moveTo(corners[0][0],corners[0][1]);
+    ctx.lineTo(corners[1][0],corners[1][1]);ctx.lineTo(corners[2][0],corners[2][1]);
+    ctx.closePath();ctx.fill();
+    ctx.strokeStyle=triColors[i]+'99';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.shadowBlur=0;
+  });
+
+  // Center glow + star
+  const cg=ctx.createRadialGradient(midX,midY,0,midX,midY,CS*1.5);
+  cg.addColorStop(0,'rgba(200,150,255,0.25)');cg.addColorStop(1,'transparent');
+  ctx.fillStyle=cg;ctx.fillRect(BO+6*CS,BO+6*CS,CS*3,CS*3);
+  ctx.shadowColor='#fff';ctx.shadowBlur=16;
+  ctx.fillStyle='#fff';
+  ctx.font=`${CS*1.3}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('★',midX,midY+2);ctx.shadowBlur=0;
+
+  // ---- Home stretch glow lanes ----
+  for(let rr=8;rr<=13;rr++){ctx.fillStyle='rgba(255,60,60,0.18)';ctx.fillRect(BO+7*CS,BO+rr*CS,CS,CS);}
+  for(let c=1;c<=6;c++){ctx.fillStyle='rgba(39,220,96,0.18)';ctx.fillRect(BO+c*CS,BO+7*CS,CS,CS);}
+  for(let rr=1;rr<=6;rr++){ctx.fillStyle='rgba(34,153,255,0.18)';ctx.fillRect(BO+7*CS,BO+rr*CS,CS,CS);}
+  for(let c=8;c<=13;c++){ctx.fillStyle='rgba(255,210,30,0.18)';ctx.fillRect(BO+c*CS,BO+7*CS,CS,CS);}
+
+  // ---- Outer neon border ----
+  ctx.shadowColor='#8855ff';ctx.shadowBlur=24;
+  ctx.strokeStyle='#9966ff';ctx.lineWidth=3;
+  ctx.roundRect(BO,BO,15*CS,15*CS,8);ctx.stroke();
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(180,140,255,0.3)';ctx.lineWidth=1.5;
+  ctx.roundRect(BO+3,BO+3,15*CS-6,15*CS-6,6);ctx.stroke();
+
+  // ---- Draw Tokens ----
+  for(let p=0;p<4;p++){
+    if(ludoState.activePlayers && !ludoState.activePlayers.includes(p)) continue;
+    for(let ti=0;ti<4;ti++){
+      const t = ludoState.tokens[p][ti];
+      if(t.pos >= 200) continue; // already home
+
+      let px, py;
+      if(t.pos === -1){
+        const hp = ludoTokenSlotPos(p,ti); px=hp.x; py=hp.y;
+      } else if(t.pos >= 100){
+        const step = t.pos-100;
+        const sp = ludoHomeStretch(p,step); px=sp.x; py=sp.y;
+      } else {
+        const bp = ludoBoardCell(p,t.pos);
+        // Offset slightly if multiple tokens on same cell
+        px=bp.x+(ti%2===0?-5:5); py=bp.y+(ti<2?-5:5);
+      }
+
+      // ---- Highlight moveable tokens with a pulsing outer ring ----
+      const cp2 = ludoState.currentPlayer;
+      const val2 = ludoState.diceVal;
+      const isMoveable = ludoState.rolled && p === cp2 && (()=>{
+        if(t.pos === -1) return val2 === 6;
+        if(t.pos >= 200) return false;
+        if(t.pos >= 100){ const step = t.pos-100; return step+val2 <= 5; }
+        const newPos = t.pos + val2;
+        if(newPos >= 52){ return (newPos-52) <= 5; }
+        return true;
+      })();
+
+      // ---- Realistic wooden H-token with bold player-colour outline ----
+      const r = CS * 0.38;
+      const tokenColors = [
+        // Red player
+        { base0:'#c0392b', base1:'#8b1a10', base2:'#5a0e08', outline:'#ff2222', glow:'rgba(255,50,50,0.7)', sheen:'rgba(255,180,160,0.22)' },
+        // Green player
+        { base0:'#27ae60', base1:'#1a7a42', base2:'#0d4a28', outline:'#22ee55', glow:'rgba(50,255,100,0.7)', sheen:'rgba(150,255,180,0.18)' },
+        // Blue player
+        { base0:'#2471a3', base1:'#1a4f78', base2:'#0d2f4a', outline:'#2299ff', glow:'rgba(50,150,255,0.7)', sheen:'rgba(140,200,255,0.18)' },
+        // Yellow player
+        { base0:'#d4ac0d', base1:'#a07c00', base2:'#6a5000', outline:'#ffdd00', glow:'rgba(255,220,0,0.7)', sheen:'rgba(255,240,120,0.22)' },
+      ];
+      const tc = tokenColors[p];
+
+      ctx.save();
+      ctx.translate(px, py);
+
+      // Pulsing tap-me ring for moveable tokens
+      if(isMoveable){
+        const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 180);
+        ctx.shadowBlur = 18 + pulse * 14;
+        ctx.shadowColor = '#ffffff';
+        ctx.strokeStyle = `rgba(255,255,255,${0.55 + pulse * 0.45})`;
+        ctx.lineWidth = 4 + pulse * 3;
+        ctx.beginPath(); ctx.arc(0, 0, r * 1.55, 0, Math.PI*2); ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+      ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowOffsetY = 4;
+
+      // Main body gradient
+      const bodyGrad = ctx.createRadialGradient(-r*0.35, -r*0.35, r*0.05, 0, 0, r);
+      bodyGrad.addColorStop(0, tc.base0);
+      bodyGrad.addColorStop(0.55, tc.base1);
+      bodyGrad.addColorStop(1, tc.base2);
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+      // === BOLD PLAYER-COLOUR OUTLINE — thick glowing ring ===
+      ctx.strokeStyle = tc.outline; ctx.lineWidth = 4.5;
+      ctx.shadowBlur = 10; ctx.shadowColor = tc.glow; ctx.shadowOffsetY = 0;
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Second inner colour ring for depth
+      ctx.strokeStyle = tc.outline; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.6;
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.84, 0, Math.PI*2); ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Inner dark circle (emblem background)
+      ctx.fillStyle = 'rgba(0,0,0,0.72)';
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.64, 0, Math.PI*2); ctx.fill();
+
+      // Inner ring border in player colour
+      ctx.strokeStyle = tc.outline; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.64, 0, Math.PI*2); ctx.stroke();
+
+      // "H" letter — bright white, bold, clearly visible
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `900 ${r * 1.0}px 'Arial Black', Arial, sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('H', 0, 1);
+
+      // Top-left sheen highlight
+      ctx.fillStyle = tc.sheen;
+      ctx.beginPath();
+      ctx.ellipse(-r*0.22, -r*0.28, r*0.42, r*0.22, -0.55, 0, Math.PI*2);
+      ctx.fill();
+
+      // Specular dot
+      ctx.fillStyle = 'rgba(255,255,255,0.38)';
+      ctx.beginPath(); ctx.arc(-r*0.28, -r*0.32, r*0.09, 0, Math.PI*2); ctx.fill();
+
+      ctx.restore();
+    }
+  }
+}
+
+// Slot positions for tokens inside home yard circles
+function ludoTokenSlotPos(player, ti){
+  const yardCenters = [
+    {col:0,row:0}, // Red
+    {col:9,row:0}, // Green
+    {col:9,row:9}, // Blue
+    {col:0,row:9}, // Yellow
+  ];
+  const yd = yardCenters[player];
+  const cx = BO+yd.col*CS+CS*3, cy = BO+yd.row*CS+CS*3;
+  const slotOffsets=[[-0.85,-0.85],[0.85,-0.85],[-0.85,0.85],[0.85,0.85]];
+  const [ox,oy] = slotOffsets[ti];
+  return {x: cx+ox*CS*0.85, y: cy+oy*CS*0.85};
+}
+
+// =========================================================
+// ================== SNAKES & LADDERS =====================
+// =========================================================
+const SNAKES={99:78,95:56,87:24,64:60,62:19,54:34,49:11,46:25,17:7};
+const LADDERS={4:25,9:31,20:59,28:84,40:68,51:67,63:81,71:92};
+let snakeState={};
+
+function initSnake(numPlayers){
+  numPlayers = numPlayers || 4;
+  const allNames  = snakeAIMode
+    ? ['You','🤖 AI 2','🤖 AI 3','🤖 AI 4']
+    : ['Red','Green','Blue','Yellow'];
+  const allColors = ['#c0392b','#27ae60','#2471a3','#d4ac0d'];
+  const canvas=document.getElementById('snake-board');
+  canvas.width=560;canvas.height=560;
+  snakeState={
+    players:numPlayers,
+    positions:Array(numPlayers).fill(0),  // 0 = start (cell 1 visually)
+    current:0,rolled:false,
+    names:allNames.slice(0,numPlayers),
+    colors:allColors.slice(0,numPlayers)
+  };
+  updateSnakeInfo();drawSnake();
+  initDiceCanvas('snake-dice');
+  document.getElementById('snake-status').textContent=snakeState.names[0]+' rolls first!';
+  document.getElementById('snake-roll-btn').disabled=false;
+}
+
+function updateSnakeInfo(){
+  const s=snakeState;
+  document.getElementById('snake-info').innerHTML=s.names.map((n,i)=>`
+    <div class="snake-player-info ${s.current===i?'active-turn':''}"
+         style="border-color:${s.current===i?s.colors[i]:'transparent'}">
+      <span style="color:${s.colors[i]}">●</span> ${n}: ${s.positions[i]===0?'Start':s.positions[i]}
+    </div>`).join('');
+}
+
+function snakeRollDice(){
+  if(snakeState.rolled)return;
+  const val=Math.floor(Math.random()*6)+1;
+  snakeState.rolled=true;
+  document.getElementById('snake-roll-btn').disabled=true;
+
+  animateDice('snake-dice', val, ()=>{
+    const s=snakeState;
+    let landPos=s.positions[s.current]+val;
+    let msg=`${s.names[s.current]} rolled ${val}`;
+
+    if(landPos>100){
+      landPos=s.positions[s.current];
+      msg+=' -- Too high!';
+      s.positions[s.current]=landPos;
+      document.getElementById('snake-status').textContent=msg;
+      drawSnake();updateSnakeInfo();
+      setTimeout(()=>snakeNextTurn(),1200);
+      return;
+    }
+    if(landPos===100){
+      s.positions[s.current]=100;
+      document.getElementById('snake-status').textContent=`🏆 ${s.names[s.current]} WINS!`;
+      drawSnake();updateSnakeInfo();return;
+    }
+
+    if(SNAKES[landPos]){
+      const finalPos=SNAKES[landPos];
+      msg+=` -- SNAKE! 🐍 ${landPos}→${finalPos}`;
+      document.getElementById('snake-status').textContent=msg;
+      s.positions[s.current]=landPos;
+      drawSnake();updateSnakeInfo();
+      setTimeout(()=>{
+        snakeAnimateMove(s.current, landPos, finalPos, 'snake', ()=>{
+          s.positions[s.current]=finalPos;
+          drawSnake();updateSnakeInfo();
+          setTimeout(()=>snakeNextTurn(),600);
+        });
+      },400);
+    } else if(LADDERS[landPos]){
+      const finalPos=LADDERS[landPos];
+      msg+=` -- LADDER! 🪜 ${landPos}→${finalPos}`;
+      document.getElementById('snake-status').textContent=msg;
+      s.positions[s.current]=landPos;
+      drawSnake();updateSnakeInfo();
+      setTimeout(()=>{
+        snakeAnimateMove(s.current, landPos, finalPos, 'ladder', ()=>{
+          s.positions[s.current]=finalPos;
+          drawSnake();updateSnakeInfo();
+          setTimeout(()=>snakeNextTurn(),600);
+        });
+      },400);
+    } else {
+      s.positions[s.current]=landPos;
+      document.getElementById('snake-status').textContent=msg;
+      drawSnake();updateSnakeInfo();
+      setTimeout(()=>snakeNextTurn(),1000);
+    }
+  });
+}
+
+function snakeNextTurn(){
+  const s=snakeState;
+  s.current=(s.current+1)%s.players;
+  s.rolled=false;
+  initDiceCanvas('snake-dice');
+  updateSnakeInfo();
+  if(snakeAIMode && s.current!==0){
+    document.getElementById('snake-roll-btn').disabled=true;
+    document.getElementById('snake-status').textContent=`🤖 ${s.names[s.current]} is rolling...`;
+    setTimeout(()=>snakeAIRoll(),700);
+  } else {
+    document.getElementById('snake-roll-btn').disabled=false;
+    document.getElementById('snake-status').textContent=`${s.names[s.current]}'s turn!`;
+  }
+}
+
+function snakeAnimateMove(playerIdx, fromCell, toCell, type, onDone){
+  const from=snakeCellPos(fromCell);
+  const to=snakeCellPos(toCell);
+  const FRAMES=50;
+  let frame=0;
+
+  const midX=(from.x+to.x)/2;
+  const midY=(from.y+to.y)/2;
+  const arcDir=type==='snake'?1:-1;
+  const cpX=midX+arcDir*(Math.abs(to.x-from.x)*0.4+30);
+  const cpY=midY+arcDir*(Math.abs(to.y-from.y)*0.15);
+
+  function easeInOut(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+
+  function step(){
+    frame++;
+    const t=easeInOut(Math.min(frame/FRAMES,1));
+    const bx=(1-t)*(1-t)*from.x+2*(1-t)*t*cpX+t*t*to.x;
+    const by=(1-t)*(1-t)*from.y+2*(1-t)*t*cpY+t*t*to.y;
+    const bounce=type==='ladder'
+      ?1+0.20*Math.sin(t*Math.PI)
+      :1+0.12*Math.sin(t*Math.PI*2.5);
+    snakeState.animToken={playerIdx,x:bx,y:by,scale:bounce};
+    drawSnake();
+    if(frame<FRAMES){requestAnimationFrame(step);}
+    else{snakeState.animToken=null;if(onDone)onDone();}
+  }
+  requestAnimationFrame(step);
+}
+
+function snakeCellPos(n){
+  const CW=50,CH=50,MX=10,MY=10;
+  const row=Math.floor((n-1)/10);
+  let col=(n-1)%10;
+  if(row%2===1)col=9-col;
+  // row 0 = bottom (cells 1-10), row 9 = top (cells 91-100)
+  return{x:MX+col*CW+CW/2, y:MY+(9-row)*CH+CH/2};
+}
+
+function drawSnake(){
+  const canvas=document.getElementById('snake-board');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // ===== PREMIUM DARK NEON BACKGROUND =====
+  const bgGrad=ctx.createRadialGradient(W/2,H/2,20,W/2,H/2,W*0.78);
+  bgGrad.addColorStop(0,'#0a1a0a');
+  bgGrad.addColorStop(0.5,'#061206');
+  bgGrad.addColorStop(1,'#020802');
+  ctx.fillStyle=bgGrad;
+  ctx.roundRect(0,0,W,H,12);ctx.fill();
+
+  // Emerald grid shimmer
+  ctx.save();ctx.globalAlpha=0.025;
+  for(let i=0;i<W;i+=5){ctx.fillStyle='#00ff88';ctx.fillRect(i,0,1,H);}
+  for(let i=0;i<H;i+=5){ctx.fillStyle='#00ff88';ctx.fillRect(0,i,W,1);}
+  ctx.restore();
+
+  // Edge vignette
+  const vgn=ctx.createRadialGradient(W/2,H/2,W*0.25,W/2,H/2,W*0.75);
+  vgn.addColorStop(0,'transparent');vgn.addColorStop(1,'rgba(0,0,0,0.6)');
+  ctx.fillStyle=vgn;ctx.fillRect(0,0,W,H);
+
+  // ---- Grid cells — neon dark style ----
+  const CW=50,CH=50,MX=10,MY=10;
+  for(let r=0;r<10;r++){
+    for(let c=0;c<10;c++){
+      const cellNum=(9-r)*10+(r%2===0?c:9-c)+1;
+      const x=MX+c*CW,y=MY+r*CH;
+      const isEven=(r+c)%2===0;
+
+      // Alternating dark cells
+      ctx.fillStyle=isEven?'rgba(0,60,20,0.55)':'rgba(0,40,12,0.35)';
+      ctx.fillRect(x,y,CW,CH);
+
+      // Special cells
+      if(cellNum===100){
+        const winGrad=ctx.createRadialGradient(x+CW/2,y+CH/2,4,x+CW/2,y+CH/2,CW);
+        winGrad.addColorStop(0,'rgba(255,215,0,0.55)');winGrad.addColorStop(1,'rgba(255,150,0,0.1)');
+        ctx.fillStyle=winGrad;ctx.fillRect(x,y,CW,CH);
+        ctx.shadowColor='#ffd700';ctx.shadowBlur=14;
+        ctx.fillStyle='rgba(255,215,0,0.9)';
+        ctx.font='bold 16px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText('🏆',x+CW/2,y+CH/2);ctx.shadowBlur=0;
+      } else if(cellNum===1){
+        ctx.fillStyle='rgba(0,200,255,0.2)';ctx.fillRect(x,y,CW,CH);
+        ctx.fillStyle='rgba(0,220,255,0.8)';
+        ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText('START',x+CW/2,y+CH/2);
+      } else {
+        // Cell number — neon tinted
+        ctx.fillStyle='rgba(0,255,140,0.5)';
+        ctx.font=`600 9px 'Nunito',sans-serif`;
+        ctx.textAlign='left';ctx.textBaseline='top';
+        ctx.fillText(cellNum,x+3,y+3);
+      }
+
+      // Cell border — neon green
+      ctx.strokeStyle='rgba(0,200,80,0.2)';ctx.lineWidth=0.7;
+      ctx.strokeRect(x,y,CW,CH);
+    }
+  }
+
+  // ---- Board border — neon ----
+  ctx.shadowColor='#00ff88';ctx.shadowBlur=20;
+  ctx.strokeStyle='#00cc66';ctx.lineWidth=4;
+  ctx.strokeRect(MX-5,MY-5,CW*10+10,CH*10+10);
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(0,255,140,0.3)';ctx.lineWidth=2;
+  ctx.strokeRect(MX-8,MY-8,CW*10+16,CH*10+16);
+  ctx.strokeStyle='rgba(0,180,80,0.15)';ctx.lineWidth=1;
+  ctx.strokeRect(MX-11,MY-11,CW*10+22,CH*10+22);
+
+  // ---- Draw LADDERS — neon gold style ----
+  Object.entries(LADDERS).forEach(([bot,top])=>{
+    const b=snakeCellPos(+bot),t=snakeCellPos(+top);
+    const dx=t.x-b.x,dy=t.y-b.y;
+    const len=Math.hypot(dx,dy);
+    const angle=Math.atan2(dy,dx);
+    const railOff=6;
+    ctx.save();ctx.translate(b.x,b.y);ctx.rotate(angle);
+
+    // Glow aura
+    ctx.strokeStyle='rgba(255,200,0,0.08)';ctx.lineWidth=18;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(len,0);ctx.stroke();
+
+    // Rail shadow
+    ctx.strokeStyle='rgba(100,60,0,0.4)';ctx.lineWidth=6;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(2,-railOff+2);ctx.lineTo(len+2,-railOff+2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(2,railOff+2);ctx.lineTo(len+2,railOff+2);ctx.stroke();
+
+    // Rails — neon gold gradient
+    const rGrad=ctx.createLinearGradient(0,0,len,0);
+    rGrad.addColorStop(0,'#ffd700');rGrad.addColorStop(0.3,'#ffed4e');
+    rGrad.addColorStop(0.6,'#ffc200');rGrad.addColorStop(1,'#ffdb2e');
+
+    ctx.shadowColor='#ffd700';ctx.shadowBlur=8;
+    ctx.strokeStyle=rGrad;ctx.lineWidth=4.5;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(0,-railOff);ctx.lineTo(len,-railOff);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,railOff);ctx.lineTo(len,railOff);ctx.stroke();
+    ctx.shadowBlur=0;
+
+    // Rungs
+    const numRungs=Math.max(3,Math.round(len/20));
+    for(let i=0;i<=numRungs;i++){
+      const rx=len*(i/numRungs);
+      ctx.strokeStyle='#ffe566';ctx.lineWidth=3;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(rx,-railOff);ctx.lineTo(rx,railOff);ctx.stroke();
+    }
+
+    ctx.restore();
+
+    // Star at base — neon glow
+    ctx.shadowColor='#ffd700';ctx.shadowBlur=12;
+    ctx.fillStyle='#ffd700';
+    ctx.font='13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('★',b.x,b.y-14);ctx.shadowBlur=0;
+  });
+
+  // ---- Draw SNAKES — neon crimson style ----
+  Object.entries(SNAKES).forEach(([head,tail])=>{
+    const h=snakeCellPos(+head),t=snakeCellPos(+tail);
+    const dx=t.x-h.x,dy=t.y-h.y;
+    const len=Math.hypot(dx,dy);
+    const midX=(h.x+t.x)/2,midY=(h.y+t.y)/2;
+
+    const perp={x:-dy/len,y:dx/len};
+    const amp=Math.min(len*0.38,55);
+    const cp1={x:h.x+dx*0.3+perp.x*amp,  y:h.y+dy*0.3+perp.y*amp};
+    const cp2={x:h.x+dx*0.7-perp.x*amp,  y:h.y+dy*0.7-perp.y*amp};
+
+    // Neon glow aura
+    ctx.save();ctx.globalAlpha=0.18;
+    ctx.strokeStyle='#ff3355';ctx.lineWidth=22;ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();ctx.moveTo(h.x,h.y);
+    ctx.bezierCurveTo(cp1.x,cp1.y,cp2.x,cp2.y,t.x,t.y);ctx.stroke();
+    ctx.restore();
+
+    // Body outline — dark
+    ctx.strokeStyle='#5a0010';ctx.lineWidth=14;ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();ctx.moveTo(h.x,h.y);
+    ctx.bezierCurveTo(cp1.x,cp1.y,cp2.x,cp2.y,t.x,t.y);ctx.stroke();
+
+    // Body neon gradient fill
+    const sGrad=ctx.createLinearGradient(h.x,h.y,t.x,t.y);
+    sGrad.addColorStop(0,'#ff2244');sGrad.addColorStop(0.3,'#cc1133');
+    sGrad.addColorStop(0.6,'#ff3355');sGrad.addColorStop(1,'#cc0022');
+    ctx.strokeStyle=sGrad;ctx.lineWidth=10;
+    ctx.shadowColor='#ff2244';ctx.shadowBlur=8;
+    ctx.beginPath();ctx.moveTo(h.x,h.y);
+    ctx.bezierCurveTo(cp1.x,cp1.y,cp2.x,cp2.y,t.x,t.y);ctx.stroke();
+    ctx.shadowBlur=0;
+
+    // Scale pattern — bright highlights
+    ctx.save();ctx.globalAlpha=0.22;
+    ctx.strokeStyle='#ff8899';ctx.lineWidth=1.5;
+    const steps=Math.round(len/11);
+    for(let i=1;i<steps;i++){
+      const tt=i/steps;
+      const bx=Math.pow(1-tt,3)*h.x+3*Math.pow(1-tt,2)*tt*cp1.x+3*(1-tt)*tt*tt*cp2.x+Math.pow(tt,3)*t.x;
+      const by=Math.pow(1-tt,3)*h.y+3*Math.pow(1-tt,2)*tt*cp1.y+3*(1-tt)*tt*tt*cp2.y+Math.pow(tt,3)*t.y;
+      ctx.beginPath();ctx.arc(bx,by,2.5,0,Math.PI*2);ctx.stroke();
+    }
+    ctx.restore();
+
+    // Yellow belly stripe
+    ctx.strokeStyle='rgba(200,180,40,0.5)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(h.x,h.y);
+    ctx.bezierCurveTo(cp1.x,cp1.y,cp2.x,cp2.y,t.x,t.y);ctx.stroke();
+
+    // Tail tip
+    ctx.fillStyle='#1a5c10';
+    ctx.beginPath();ctx.arc(t.x,t.y,4,0,Math.PI*2);ctx.fill();
+
+    // Snake HEAD (detailed illustrated)
+    const headAngle=Math.atan2(h.y-cp1.y,h.x-cp1.x);
+    ctx.save();ctx.translate(h.x,h.y);ctx.rotate(headAngle);
+
+    // Head shape
+    ctx.fillStyle='#1a4a10';
+    ctx.beginPath();ctx.ellipse(0,0,13,9,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#2ecc40';
+    ctx.beginPath();ctx.ellipse(-1,0,11,8,0,0,Math.PI*2);ctx.fill();
+
+    // Scales on head
+    ctx.fillStyle='#1e8449';
+    ctx.beginPath();ctx.ellipse(-2,-2,5,3,0.3,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(-2,2,5,3,-0.3,0,Math.PI*2);ctx.fill();
+
+    // Eyes -- yellow with slit
+    [-4,4].forEach(ey=>{
+      ctx.fillStyle='#f1c40f';
+      ctx.beginPath();ctx.arc(4,ey*0.55,3.5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#1a0a00';
+      ctx.beginPath();ctx.ellipse(4,ey*0.55,1,2.5,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,0.6)';
+      ctx.beginPath();ctx.arc(5,ey*0.55-0.5,0.8,0,Math.PI*2);ctx.fill();
+    });
+
+    // Tongue (forked)
+    ctx.strokeStyle='#e74c3c';ctx.lineWidth=1.5;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(12,0);ctx.lineTo(18,0);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(22,-3);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(22,3);ctx.stroke();
+
+    ctx.restore();
+  });
+
+  // ---- Compass rose (top-left corner, vintage) ----
+  const cx2=MX+20,cy2=MY+20;
+  ctx.save();ctx.translate(cx2,cy2);
+  ctx.fillStyle='rgba(100,60,10,0.6)';
+  ctx.font='bold 9px Georgia,serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  const dirs=['N','E','S','W'];const dang=[0,Math.PI/2,Math.PI,-Math.PI/2];
+  dang.forEach((a,i)=>{
+    ctx.save();ctx.rotate(a);
+    ctx.strokeStyle='rgba(100,60,10,0.5)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-14);ctx.stroke();
+    ctx.fillText(dirs[i],0,-18);ctx.restore();
+  });
+  ctx.fillStyle='rgba(180,130,20,0.7)';
+  ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  // ---- Player tokens (wooden H-disc, 4 colours) ----
+  const snakeTokenColors = [
+    // Red rosewood
+    { b0:'#c0392b', b1:'#8b1a10', b2:'#5a0e08', rim:'#e85040', sheen:'rgba(255,180,160,0.22)' },
+    // Green forest
+    { b0:'#27ae60', b1:'#1a7a42', b2:'#0d4a28', rim:'#3dcc76', sheen:'rgba(150,255,180,0.18)' },
+    // Blue cobalt
+    { b0:'#2471a3', b1:'#1a4f78', b2:'#0d2f4a', rim:'#3a8fd4', sheen:'rgba(140,200,255,0.18)' },
+    // Yellow golden
+    { b0:'#d4ac0d', b1:'#a07c00', b2:'#6a5000', rim:'#f0c830', sheen:'rgba(255,240,120,0.22)' },
+  ];
+  // Helper to draw one snake/ladder token at (px,py) with scale
+  function drawSnakeToken(px, py, i, scale){
+    const tc=snakeTokenColors[i];
+    const r=16*scale;
+    ctx.save();
+    ctx.translate(px,py);
+
+    ctx.shadowBlur=4; ctx.shadowColor='rgba(0,0,0,0.45)'; ctx.shadowOffsetY=2;
+    const bodyG=ctx.createRadialGradient(-r*0.35,-r*0.35,r*0.05,0,0,r);
+    bodyG.addColorStop(0,tc.b0);bodyG.addColorStop(0.55,tc.b1);bodyG.addColorStop(1,tc.b2);
+    ctx.fillStyle=bodyG;
+    ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+
+    ctx.strokeStyle=tc.rim;ctx.lineWidth=1.6;
+    ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle='#d4ac0d';ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.arc(0,0,r*0.86,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='rgba(0,0,0,0.72)';
+    ctx.beginPath();ctx.arc(0,0,r*0.62,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#f0c030';ctx.lineWidth=1.6;
+    ctx.beginPath();ctx.arc(0,0,r*0.62,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='#ffe040';
+    ctx.font=`900 ${r*1.0}px Georgia,serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.shadowColor='rgba(0,0,0,0.8)';ctx.shadowBlur=2;
+    ctx.fillText('H',0,1);ctx.shadowBlur=0;
+    ctx.fillStyle=tc.sheen;
+    ctx.beginPath();ctx.ellipse(-r*0.22,-r*0.28,r*0.40,r*0.20,-0.55,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.38)';
+    ctx.beginPath();ctx.arc(-r*0.28,-r*0.32,r*0.09,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+
+  const offsets=[[-11,-11],[11,-11],[-11,11],[11,11]];
+
+  // Draw static tokens (skip the one currently being animated)
+  const startOffsets=[[-18,-18],[18,-18],[-18,18],[18,18]];
+  snakeState.positions.forEach((pos,i)=>{
+    if(snakeState.animToken&&snakeState.animToken.playerIdx===i)return; // skip — drawn separately below
+    let px,py;
+    if(pos===0){
+      // Draw at "start" zone — bottom-left corner below cell 1
+      const cell1=snakeCellPos(1);
+      px=cell1.x+startOffsets[i][0];
+      py=cell1.y+startOffsets[i][1];
+    } else {
+      const p=snakeCellPos(pos);
+      px=p.x+startOffsets[i][0]; py=p.y+startOffsets[i][1];
+    }
+    drawSnakeToken(px,py,i,1);
+  });
+
+  // Draw animated token on top (larger, glowing)
+  if(snakeState.animToken){
+    const at=snakeState.animToken;
+    const i=at.playerIdx;
+    ctx.save();
+    // Glow ring around moving token
+    ctx.shadowBlur=18;
+    ctx.shadowColor=snakeTokenColors[i].rim;
+    ctx.beginPath();ctx.arc(at.x,at.y,10*at.scale,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+    drawSnakeToken(at.x,at.y,i,at.scale);
+  }
+
+  // ---- "100" cell golden star ----
+  const winCell=snakeCellPos(100);
+  ctx.fillStyle='rgba(200,150,0,0.15)';
+  ctx.beginPath();ctx.arc(winCell.x,winCell.y,22,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(180,130,0,0.7)';
+  ctx.font='20px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('★',winCell.x,winCell.y+1);
+}
+
+// =========================================================
+// ======================== CHESS ==========================
+// =========================================================
+let chessState={};
+const CHESS_PIECES={
+  K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',
+  k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'
+};
+function initChess(){
+  chessState={
+    board:[
+      ['r','n','b','q','k','b','n','r'],
+      ['p','p','p','p','p','p','p','p'],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      ['P','P','P','P','P','P','P','P'],
+      ['R','N','B','Q','K','B','N','R'],
+    ],
+    selected:null,validMoves:[],
+    turn:'white',history:[],
+    check:false,checkmate:false,
+  };
+  document.getElementById('chess-status').textContent=chessAIMode?"Your Turn (White)":"White's Turn";
+  document.getElementById('chess-status-bar').textContent=chessAIMode?'You play White. AI plays Black.':'Click a piece to select, then click destination';
+  document.getElementById('chess-board').onclick=chessClick;
+  drawChess();
+}
+
+function chessClick(e){
+  if(chessState.checkmate)return;
+  if(chessAIMode && chessState.turn==='black')return; // AI controls black
+  if(chessAIThinking)return;
+  const canvas=document.getElementById('chess-board');
+  const rect=canvas.getBoundingClientRect();
+  const scaleX=canvas.width/rect.width;
+  const scaleY=canvas.height/rect.height;
+  const mx=(e.clientX-rect.left)*scaleX;
+  const my=(e.clientY-rect.top)*scaleY;
+  const cellSize=90,offset=0;
+  const col=Math.floor((mx-offset)/cellSize);
+  const row=Math.floor((my-offset)/cellSize);
+  if(col<0||col>7||row<0||row>7)return;
+  
+  const s=chessState;
+  const piece=s.board[row][col];
+  const isWhite=p=>p&&p===p.toUpperCase();
+  const isBlack=p=>p&&p===p.toLowerCase();
+  const myPiece=s.turn==='white'?isWhite:isBlack;
+  
+  if(s.selected){
+    // Try to move
+    const move=s.validMoves.find(m=>m.r===row&&m.c===col);
+    if(move){
+      // Execute move
+      s.history.push(JSON.parse(JSON.stringify(s.board)));
+      const [sr,sc]=s.selected;
+      const movingPiece=s.board[sr][sc];
+      s.board[row][col]=movingPiece;
+      s.board[sr][sc]=null;
+      // Pawn promotion
+      if(movingPiece==='P'&&row===0)s.board[row][col]='Q';
+      if(movingPiece==='p'&&row===7)s.board[row][col]='q';
+      s.selected=null;s.validMoves=[];
+      s.turn=s.turn==='white'?'black':'white';
+      // Check for check
+      const inCheck=chessInCheck(s.turn);
+      s.check=inCheck;
+      const allMoves=chessAllMoves(s.turn);
+      if(allMoves.length===0){
+        s.checkmate=true;
+        const winner=s.turn==='white'?'Black':'White';
+        document.getElementById('chess-status').textContent=`🏆 ${winner} Wins! Checkmate!`;
+      } else {
+        if(chessAIMode && s.turn==='black'){
+          document.getElementById('chess-status').textContent='🤖 AI is thinking...';
+          drawChess();
+          setTimeout(chessAIMakeMove, 300);
+          return;
+        }
+        document.getElementById('chess-status').textContent=
+          `${s.turn==='white'?'White':'Black'}'s Turn${inCheck?' -- CHECK!':''}`;
+      }
+    } else if(piece&&myPiece(piece)){
+      s.selected=[row,col];
+      s.validMoves=chessValidMoves(row,col);
+    } else {
+      s.selected=null;s.validMoves=[];
+    }
+  } else if(piece&&myPiece(piece)){
+    s.selected=[row,col];
+    s.validMoves=chessValidMoves(row,col);
+  }
+  drawChess();
+}
+
+function chessValidMoves(row,col){
+  const s=chessState;
+  const piece=s.board[row][col];
+  if(!piece)return[];
+  const moves=[];
+  const isW=piece===piece.toUpperCase();
+  const enemy=p=>p&&(isW?p===p.toLowerCase():p===p.toUpperCase());
+  const empty=p=>!p;
+  const add=(r,c)=>{if(r>=0&&r<8&&c>=0&&c<8)moves.push({r,c})};
+  
+  const p=piece.toLowerCase();
+  if(p==='p'){
+    const dir=isW?-1:1;
+    const startRow=isW?6:1;
+    if(!s.board[row+dir]?.[col]){add(row+dir,col);
+      if(row===startRow&&!s.board[row+2*dir]?.[col])add(row+2*dir,col);}
+    for(const dc of[-1,1])if(enemy(s.board[row+dir]?.[col+dc]))add(row+dir,col+dc);
+  } else if(p==='r'||p==='q'){
+    for(const [dr,dc] of[[1,0],[-1,0],[0,1],[0,-1]]){
+      let r=row+dr,c=col+dc;
+      while(r>=0&&r<8&&c>=0&&c<8){
+        if(empty(s.board[r][c]))add(r,c);
+        else{if(enemy(s.board[r][c]))add(r,c);break;}
+        r+=dr;c+=dc;
+      }
+    }
+  }
+  if(p==='b'||p==='q'){
+    for(const [dr,dc] of[[1,1],[1,-1],[-1,1],[-1,-1]]){
+      let r=row+dr,c=col+dc;
+      while(r>=0&&r<8&&c>=0&&c<8){
+        if(empty(s.board[r][c]))add(r,c);
+        else{if(enemy(s.board[r][c]))add(r,c);break;}
+        r+=dr;c+=dc;
+      }
+    }
+  }
+  if(p==='n'){
+    for(const [dr,dc] of[[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]]){
+      const r=row+dr,c=col+dc;
+      if(r>=0&&r<8&&c>=0&&c<8&&!(!enemy(s.board[r][c])&&s.board[r][c]))add(r,c);
+    }
+  }
+  if(p==='k'){
+    for(const [dr,dc] of[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){
+      const r=row+dr,c=col+dc;
+      if(r>=0&&r<8&&c>=0&&c<8&&!(!enemy(s.board[r][c])&&s.board[r][c]))add(r,c);
+    }
+  }
+  // Filter moves that leave king in check (simplified)
+  return moves.filter(m=>{
+    const board2=JSON.parse(JSON.stringify(s.board));
+    board2[m.r][m.c]=board2[row][col];board2[row][col]=null;
+    return!chessInCheckBoard(isW?'white':'black',board2);
+  });
+}
+
+function chessInCheck(turn){return chessInCheckBoard(turn,chessState.board);}
+function chessInCheckBoard(turn,board){
+  const isW=turn==='white';
+  let kr=-1,kc=-1;
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++)
+    if(board[r][c]===(isW?'K':'k')){kr=r;kc=c;}
+  if(kr<0)return true;
+  // Check if any enemy piece attacks king
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const p=board[r][c];
+    if(!p)continue;
+    if(isW&&p===p.toUpperCase())continue;
+    if(!isW&&p===p.toLowerCase())continue;
+    // Simplified: check if this piece could move to king's square
+    const moves=chessRawMoves(r,c,board);
+    if(moves.some(m=>m.r===kr&&m.c===kc))return true;
+  }
+  return false;
+}
+
+function chessRawMoves(row,col,board){
+  const piece=board[row][col];
+  if(!piece)return[];
+  const moves=[];
+  const isW=piece===piece.toUpperCase();
+  const enemy=p=>p&&(isW?p===p.toLowerCase():p===p.toUpperCase());
+  const empty=p=>!p;
+  const add=(r,c)=>{if(r>=0&&r<8&&c>=0&&c<8&&(empty(board[r][c])||enemy(board[r][c])))moves.push({r,c})};
+  const p=piece.toLowerCase();
+  if(p==='p'){const dir=isW?-1:1;for(const dc of[-1,1])if(enemy(board[row+dir]?.[col+dc]))add(row+dir,col+dc);}
+  if(p==='r'||p==='q'){for(const [dr,dc] of[[1,0],[-1,0],[0,1],[0,-1]]){let r=row+dr,c=col+dc;while(r>=0&&r<8&&c>=0&&c<8){if(empty(board[r][c]))add(r,c);else{if(enemy(board[r][c]))add(r,c);break;}r+=dr;c+=dc;}}}
+  if(p==='b'||p==='q'){for(const [dr,dc] of[[1,1],[1,-1],[-1,1],[-1,-1]]){let r=row+dr,c=col+dc;while(r>=0&&r<8&&c>=0&&c<8){if(empty(board[r][c]))add(r,c);else{if(enemy(board[r][c]))add(r,c);break;}r+=dr;c+=dc;}}}
+  if(p==='n'){for(const [dr,dc] of[[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]]){add(row+dr,col+dc);}}
+  if(p==='k'){for(const [dr,dc] of[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){add(row+dr,col+dc);}}
+  return moves;
+}
+
+function chessAllMoves(turn){
+  const s=chessState;const moves=[];const isW=turn==='white';
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const p=s.board[r][c];
+    if(!p)continue;
+    if(isW&&p!==p.toUpperCase())continue;
+    if(!isW&&p!==p.toLowerCase())continue;
+    const vm=chessValidMoves(r,c);
+    vm.forEach(m=>moves.push({fr:r,fc:c,...m}));
+  }
+  return moves;
+}
+
+function chessUndoMove(){
+  if(!chessState.history.length)return;
+  // Undo AI's move too if in AI mode
+  if(chessAIMode && chessState.history.length>1){
+    chessState.board=chessState.history.pop(); // undo AI
+    chessState.board=chessState.history.pop(); // undo player
+    chessState.turn='white';
+  } else {
+    chessState.board=chessState.history.pop();
+    chessState.turn=chessState.turn==='white'?'black':'white';
+  }
+  chessState.selected=null;chessState.validMoves=[];
+  chessState.checkmate=false;chessState.check=false;
+  document.getElementById('chess-status').textContent=`${chessState.turn==='white'?'White':'Black'}'s Turn`;
+  drawChess();
+}
+
+// ===== AI CHESS MODE =====
+let chessAIMode = false;
+let chessAIThinking = false;
+
+function toggleAI(){
+  chessAIMode = !chessAIMode;
+  const knob = document.getElementById('ai-toggle-knob');
+  const toggle = document.getElementById('ai-toggle');
+  if(chessAIMode){
+    toggle.style.background='#4d96ff';
+    knob.style.left='24px';
+    document.getElementById('chess-status-bar').textContent='You play White. AI plays Black.';
+  } else {
+    toggle.style.background='#333';
+    knob.style.left='1px';
+    document.getElementById('chess-status-bar').textContent='Click a piece to select, then click destination';
+  }
+  initChess();
+}
+
+function boardToFEN(board){
+  // Convert board array to a simple text description for AI
+  const files='abcdefgh';
+  const pieces=[];
+  for(let r=0;r<8;r++){
+    for(let c=0;c<8;c++){
+      const p=board[r][c];
+      if(p) pieces.push(`${p} at ${files[c]}${8-r}`);
+    }
+  }
+  return pieces.join(', ');
+}
+
+function moveToAlgebraic(board, fr, fc, tr, tc){
+  const files='abcdefgh';
+  const piece=board[fr][fc];
+  const pName={p:'',r:'R',n:'N',b:'B',q:'Q',k:'K'}[piece.toLowerCase()];
+  const cap=board[tr][tc]?'x':'';
+  return `${pName}${files[fc]}${8-fr}${cap}${files[tc]}${8-tr}`;
+}
+
+async function chessAIMakeMove(){
+  if(chessAIThinking||chessState.checkmate)return;
+  chessAIThinking=true;
+  document.getElementById('ai-thinking').style.display='block';
+  document.getElementById('chess-board').style.pointerEvents='none';
+
+  const allMoves=chessAllMoves('black');
+  if(allMoves.length===0){ chessAIThinking=false; document.getElementById('ai-thinking').style.display='none'; return; }
+
+  // Build board description
+  const boardDesc=boardToFEN(chessState.board);
+  const moveList=allMoves.map(m=>moveToAlgebraic(chessState.board,m.fr,m.fc,m.r,m.c)).join(', ');
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:100,
+        system:'You are a chess engine. You will be given the current board position and a list of legal moves for Black. Choose the best move. Respond ONLY with the move index number (0-based) from the provided list, nothing else.',
+        messages:[{
+          role:'user',
+          content:`Board position (uppercase=White, lowercase=Black):\n${boardDesc}\n\nLegal moves for Black (indexed from 0):\n${allMoves.map((m,i)=>i+': '+moveToAlgebraic(chessState.board,m.fr,m.fc,m.r,m.c)).join('\n')}\n\nRespond with just the index number of the best move.`
+        }]
+      })
+    });
+    const data=await resp.json();
+    const text=(data.content&&data.content[0]&&data.content[0].text)||'0';
+    const idx=parseInt(text.trim())||0;
+    const move=allMoves[Math.min(Math.max(0,idx),allMoves.length-1)]||allMoves[0];
+
+    // Execute AI move
+    const s=chessState;
+    s.history.push(JSON.parse(JSON.stringify(s.board)));
+    const mp=s.board[move.fr][move.fc];
+    s.board[move.r][move.c]=mp;
+    s.board[move.fr][move.fc]=null;
+    if(mp==='p'&&move.r===7)s.board[move.r][move.c]='q';
+    s.selected=null;s.validMoves=[];
+    s.turn='white';
+    const inCheck=chessInCheck('white');
+    s.check=inCheck;
+    const whiteMoves=chessAllMoves('white');
+    if(whiteMoves.length===0){
+      s.checkmate=true;
+      document.getElementById('chess-status').textContent='🤖 AI Wins! Checkmate!';
+      document.getElementById('chess-status-bar').textContent='Better luck next time!';
+    } else {
+      document.getElementById('chess-status').textContent=`Your Turn (White)${inCheck?' — CHECK!':''}`;
+    }
+    drawChess();
+  } catch(e){
+    // Fallback: pick a random move
+    const move=allMoves[Math.floor(Math.random()*allMoves.length)];
+    const s=chessState;
+    s.history.push(JSON.parse(JSON.stringify(s.board)));
+    const mp=s.board[move.fr][move.fc];
+    s.board[move.r][move.c]=mp;
+    s.board[move.fr][move.fc]=null;
+    s.turn='white';
+    s.check=chessInCheck('white');
+    document.getElementById('chess-status').textContent=`Your Turn (White)${s.check?' — CHECK!':''}`;
+    drawChess();
+  } finally {
+    chessAIThinking=false;
+    document.getElementById('ai-thinking').style.display='none';
+    document.getElementById('chess-board').style.pointerEvents='auto';
+  }
+}
+
+// ---- Draw Staunton chess piece matching reference photo ----
+// H emblem ONLY on the wide base disc. Bodies are clean Staunton silhouettes.
+// cx,cy = centre of the cell. All pieces are scaled to fit within the cell.
+function drawChessPiece(ctx, type, isWhite, cx, cy, cell){
+  const S = cell * 0.82;  // bigger pieces
+  const baseY = cy + cell * 0.42;
+  const fill   = isWhite ? '#f2ead8' : '#1c1610';
+  const hi     = isWhite ? '#fffef8' : '#342e20';
+  const shadow = isWhite ? '#9a8840' : '#060402';
+  const shine  = isWhite ? 'rgba(255,255,245,0.65)' : 'rgba(255,255,255,0.09)';
+  const outline= isWhite ? '#6a5018' : '#3a2a08';
+
+  ctx.save();
+  ctx.translate(cx, baseY); // origin = bottom-centre of piece
+
+  // All Y coords are negative (upward from base)
+  function body(fn, grad){
+    ctx.beginPath(); fn();
+    ctx.fillStyle = grad || fill;
+    ctx.fill();
+    ctx.strokeStyle = outline; ctx.lineWidth = 0.8; ctx.stroke();
+  }
+  function radG(lx,ly,r){
+    const g=ctx.createRadialGradient(lx,ly,r*0.04,lx*0.4,ly*0.4,r);
+    g.addColorStop(0,hi); g.addColorStop(0.5,fill); g.addColorStop(1,shadow); return g;
+  }
+  function linG(x0,y0,x1,y1){
+    const g=ctx.createLinearGradient(x0,y0,x1,y1);
+    g.addColorStop(0,hi); g.addColorStop(0.4,fill); g.addColorStop(1,shadow); return g;
+  }
+
+  const p = type.toLowerCase();
+
+  // ── SHARED BASE with H emblem (matches photo: wide disc, gold badge) ──
+  function drawBase(bw){
+    const bTop = -S*0.08, bBot = 0;
+    // Drop shadow ellipse
+    ctx.fillStyle='rgba(0,0,0,0.25)';
+    ctx.beginPath(); ctx.ellipse(1, 3, bw*0.88, S*0.055, 0, 0, Math.PI*2); ctx.fill();
+    // Base top rim
+    body(()=>ctx.ellipse(0,bTop,bw,S*0.055,0,0,Math.PI*2),
+      linG(-bw,bTop,bw,bBot));
+    // Base cylinder sides
+    const sg=ctx.createLinearGradient(-bw,bTop,bw,bBot);
+    sg.addColorStop(0,hi); sg.addColorStop(0.35,fill); sg.addColorStop(1,shadow);
+    ctx.fillStyle=sg;
+    ctx.beginPath();
+    ctx.moveTo(-bw,bTop); ctx.lineTo(bw,bTop);
+    ctx.lineTo(bw*0.96,bBot); ctx.lineTo(-bw*0.96,bBot);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle=outline; ctx.lineWidth=0.7; ctx.stroke();
+    // Base bottom ellipse
+    body(()=>ctx.ellipse(0,bBot,bw*0.96,S*0.048,0,0,Math.PI*2), shadow);
+
+    // ── Gold H emblem badge on base — sized to fit snugly inside disc ──
+    const ey = bTop * 0.52;        // vertically centred on base face
+    const R  = bw * 0.50;          // fits inside the disc with margin
+    // Dark background circle
+    ctx.fillStyle='rgba(0,0,0,0.82)';
+    ctx.beginPath(); ctx.arc(0,ey,R,0,Math.PI*2); ctx.fill();
+    // Gold outer ring
+    ctx.strokeStyle='#d4a820'; ctx.lineWidth=R*0.13;
+    ctx.beginPath(); ctx.arc(0,ey,R*0.87,0,Math.PI*2); ctx.stroke();
+    // Inner dashed accent ring
+    ctx.strokeStyle='#f0c840'; ctx.lineWidth=R*0.055; ctx.setLineDash([R*0.18,R*0.14]);
+    ctx.beginPath(); ctx.arc(0,ey,R*0.70,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+    // Bold gold H — fills the inner circle cleanly
+    ctx.fillStyle='#ffe030';
+    ctx.font=`900 ${R*1.08}px Georgia,serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.shadowColor='rgba(0,0,0,0.9)'; ctx.shadowBlur=3;
+    ctx.fillText('H', 0, ey+R*0.04); ctx.shadowBlur=0;
+  }
+
+  // ── Shared neck stem ──
+  function drawNeck(nw, top, bot){
+    const g=ctx.createLinearGradient(-nw,top,nw,bot);
+    g.addColorStop(0,hi); g.addColorStop(0.5,fill); g.addColorStop(1,shadow);
+    ctx.fillStyle=g;
+    ctx.beginPath();
+    ctx.moveTo(-nw*1.1,bot); ctx.lineTo(nw*1.1,bot);
+    ctx.lineTo(nw*0.7,top); ctx.lineTo(-nw*0.7,top);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle=outline; ctx.lineWidth=0.7; ctx.stroke();
+  }
+
+  // ── Shared collar ring ──
+  function collar(y, rx, ry){
+    body(()=>ctx.ellipse(0,y,rx,ry,0,0,Math.PI*2));
+  }
+
+  // ════════════════════════════════════════
+  // PAWN — small ball head, tapered neck
+  // ════════════════════════════════════════
+  if(p==='p'){
+    const top=-S*0.52;
+    // Neck
+    drawNeck(S*0.085, top+S*0.195, -S*0.08);
+    // Lower collar
+    collar(-S*0.08, S*0.155, S*0.048);
+    // Head ball
+    body(()=>ctx.arc(0,top+S*0.13,S*0.165,0,Math.PI*2), radG(-S*0.06,top+S*0.07,S*0.165));
+    // Shine
+    ctx.fillStyle=shine;
+    ctx.beginPath(); ctx.ellipse(-S*0.055,top+S*0.06,S*0.065,S*0.042,-0.5,0,Math.PI*2); ctx.fill();
+    drawBase(S*0.35);
+  }
+
+  // ════════════════════════════════════════
+  // ROOK — castle tower with battlements
+  // ════════════════════════════════════════
+  else if(p==='r'){
+    const top=-S*0.78, tw=S*0.215;
+    // Neck connector
+    drawNeck(S*0.10, -S*0.08, -S*0.14);
+    // Lower collar
+    collar(-S*0.08, S*0.175, S*0.052);
+    // Tower body (slightly tapering)
+    body(()=>{
+      ctx.moveTo(-tw,-S*0.14); ctx.lineTo(tw,-S*0.14);
+      ctx.lineTo(tw*0.88,top+S*0.18); ctx.lineTo(-tw*0.88,top+S*0.18); ctx.closePath();
+    }, linG(0,-S*0.14,0,top+S*0.18));
+    // Top platform
+    body(()=>ctx.rect(-tw*1.08,top+S*0.14,tw*2.16,S*0.05));
+    // Three battlements
+    const bStep=tw*0.75;
+    [-bStep, 0, bStep].forEach(bx=>{
+      body(()=>ctx.rect(bx-tw*0.30, top, tw*0.60, S*0.15));
+    });
+    // Crenel gaps (dark cuts between battlements)
+    ctx.fillStyle=isWhite?'rgba(0,0,0,0.14)':'rgba(0,0,0,0.6)';
+    [-bStep*0.5+tw*0.30, bStep*0.5-tw*0.30].forEach(bx=>{
+      ctx.beginPath(); ctx.rect(bx-tw*0.18,top,tw*0.36,S*0.15); ctx.fill();
+    });
+    // Shine on body
+    ctx.fillStyle=shine;
+    ctx.beginPath(); ctx.ellipse(-tw*0.55,-S*0.38,S*0.055,S*0.12,-0.15,0,Math.PI*2); ctx.fill();
+    drawBase(S*0.42);
+  }
+
+  // ════════════════════════════════════════
+  // KNIGHT — accurate horse head profile facing right
+  // ════════════════════════════════════════
+  else if(p==='n'){
+    // Neck connector to base
+    drawNeck(S*0.115, -S*0.08, -S*0.14);
+    collar(-S*0.08, S*0.175, S*0.052);
+
+    ctx.save();
+    // Translate so horse head is well-centred in the cell
+    ctx.translate(S*0.02, 0);
+
+    const hFill = isWhite
+      ? ctx.createRadialGradient(-S*0.06,-S*0.52,S*0.02, S*0.04,-S*0.38,S*0.38)
+      : ctx.createRadialGradient(-S*0.06,-S*0.52,S*0.02, S*0.04,-S*0.38,S*0.38);
+    if(isWhite){
+      hFill.addColorStop(0,'#fffef5'); hFill.addColorStop(0.5,'#f2ead8'); hFill.addColorStop(1,'#9a8840');
+    } else {
+      hFill.addColorStop(0,'#342e20'); hFill.addColorStop(0.5,'#1c1610'); hFill.addColorStop(1,'#060402');
+    }
+
+    // ── Neck / chest block ──
+    ctx.beginPath();
+    ctx.moveTo(-S*0.12,-S*0.13);
+    ctx.lineTo( S*0.10,-S*0.13);
+    ctx.lineTo( S*0.13,-S*0.30);
+    ctx.lineTo( S*0.06,-S*0.44);
+    ctx.lineTo(-S*0.10,-S*0.42);
+    ctx.lineTo(-S*0.13,-S*0.28);
+    ctx.closePath();
+    ctx.fillStyle = hFill; ctx.fill();
+    ctx.strokeStyle = outline; ctx.lineWidth = 0.8; ctx.stroke();
+
+    // ── Horse head — accurate Staunton profile facing RIGHT ──
+    // Head = wider at jaw, narrowing to muzzle pointing right, poll (top) arching left-back
+    ctx.beginPath();
+    // Start at base of neck (back of head, lower-left)
+    ctx.moveTo(-S*0.10, -S*0.42);
+    // Back of neck curving up to poll (top-left of head)
+    ctx.bezierCurveTo(-S*0.18,-S*0.52, -S*0.18,-S*0.64, -S*0.08,-S*0.72);
+    // Poll to ear tip (top, slightly right)
+    ctx.bezierCurveTo(-S*0.02,-S*0.76,  S*0.04,-S*0.77,  S*0.06,-S*0.73);
+    // Ear back down to forehead
+    ctx.bezierCurveTo( S*0.10,-S*0.70,  S*0.10,-S*0.66,  S*0.08,-S*0.63);
+    // Forehead curving forward to nose bridge
+    ctx.bezierCurveTo( S*0.12,-S*0.60,  S*0.20,-S*0.56,  S*0.22,-S*0.50);
+    // Nose bridge down to muzzle tip (rightmost point)
+    ctx.bezierCurveTo( S*0.24,-S*0.45,  S*0.25,-S*0.40,  S*0.24,-S*0.36);
+    // Muzzle bottom curving back under chin
+    ctx.bezierCurveTo( S*0.22,-S*0.32,  S*0.16,-S*0.30,  S*0.08,-S*0.32);
+    // Under chin connecting back to neck base
+    ctx.bezierCurveTo( S*0.02,-S*0.34, -S*0.04,-S*0.38, -S*0.10,-S*0.42);
+    ctx.closePath();
+    ctx.fillStyle = hFill; ctx.fill();
+    ctx.strokeStyle = outline; ctx.lineWidth = 0.9; ctx.stroke();
+
+    // ── Ear (small upright triangle on poll) ──
+    ctx.beginPath();
+    ctx.moveTo(S*0.01,-S*0.73);
+    ctx.lineTo(S*0.06,-S*0.80);
+    ctx.lineTo(S*0.10,-S*0.73);
+    ctx.closePath();
+    ctx.fillStyle = isWhite ? '#e8dcc0' : '#2a2418';
+    ctx.fill();
+    ctx.strokeStyle = outline; ctx.lineWidth = 0.7; ctx.stroke();
+    // Inner ear
+    ctx.beginPath();
+    ctx.moveTo(S*0.03,-S*0.73);
+    ctx.lineTo(S*0.06,-S*0.78);
+    ctx.lineTo(S*0.09,-S*0.73);
+    ctx.closePath();
+    ctx.fillStyle = isWhite ? 'rgba(180,100,80,0.35)' : 'rgba(180,80,60,0.25)';
+    ctx.fill();
+
+    // ── Eye — large, forward on face ──
+    // Eye white / iris base
+    const eyeX = S*0.12, eyeY = -S*0.60;
+    ctx.fillStyle = isWhite ? '#2a1a08' : '#d4b870';
+    ctx.beginPath(); ctx.ellipse(eyeX, eyeY, S*0.034, S*0.028, 0.2, 0, Math.PI*2); ctx.fill();
+    // Pupil
+    ctx.fillStyle = isWhite ? '#0a0500' : '#0a0500';
+    ctx.beginPath(); ctx.ellipse(eyeX+S*0.004, eyeY, S*0.016, S*0.022, 0.1, 0, Math.PI*2); ctx.fill();
+    // Eye highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.beginPath(); ctx.arc(eyeX-S*0.008, eyeY-S*0.010, S*0.008, 0, Math.PI*2); ctx.fill();
+
+    // ── Nostril on muzzle ──
+    ctx.fillStyle = isWhite ? 'rgba(0,0,0,0.20)' : 'rgba(255,255,255,0.12)';
+    ctx.beginPath(); ctx.ellipse(S*0.21, -S*0.38, S*0.022, S*0.014, 0.5, 0, Math.PI*2); ctx.fill();
+
+    // ── Mane — flowing strokes from poll down the neck ──
+    const maneCol = isWhite ? 'rgba(110,80,15,0.50)' : 'rgba(255,255,255,0.14)';
+    ctx.strokeStyle = maneCol; ctx.lineWidth = 2.2; ctx.lineCap='round';
+    const maneStrokes=[
+      [[-S*0.06,-S*0.71],[-S*0.14,-S*0.62],[-S*0.16,-S*0.52],[-S*0.12,-S*0.44]],
+      [[-S*0.04,-S*0.70],[-S*0.10,-S*0.60],[-S*0.12,-S*0.50],[-S*0.08,-S*0.43]],
+      [[ S*0.00,-S*0.68],[-S*0.05,-S*0.58],[-S*0.07,-S*0.50],[-S*0.04,-S*0.43]],
+    ];
+    maneStrokes.forEach(pts=>{
+      ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]);
+      for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]);
+      ctx.stroke();
+    });
+
+    // ── Cheek sheen highlight ──
+    ctx.fillStyle = shine;
+    ctx.beginPath(); ctx.ellipse(S*0.06,-S*0.66, S*0.06, S*0.038,-0.4,0,Math.PI*2); ctx.fill();
+
+    ctx.restore();
+    drawBase(S*0.40);
+  }
+
+  // ════════════════════════════════════════
+  // BISHOP — tall mitre with finial ball
+  // ════════════════════════════════════════
+  else if(p==='b'){
+    const top=-S*0.82;
+    drawNeck(S*0.09, -S*0.08, -S*0.14);
+    collar(-S*0.08, S*0.165, S*0.050);
+    // Lower waist collar
+    collar(-S*0.28, S*0.115, S*0.038);
+    // Main mitre body — tall ovoid
+    body(()=>{
+      ctx.moveTo(-S*0.115,-S*0.28); ctx.lineTo(S*0.115,-S*0.28);
+      ctx.bezierCurveTo(S*0.10,-S*0.52, S*0.065,-S*0.66, 0,top+S*0.12);
+      ctx.bezierCurveTo(-S*0.065,-S*0.66,-S*0.10,-S*0.52,-S*0.115,-S*0.28);
+      ctx.closePath();
+    }, linG(0,-S*0.28,0,top+S*0.12));
+    // Mitre slash line
+    ctx.strokeStyle=isWhite?'rgba(90,65,15,0.38)':'rgba(255,255,200,0.14)'; ctx.lineWidth=1.3;
+    ctx.beginPath(); ctx.moveTo(-S*0.07,-S*0.36); ctx.lineTo(S*0.07,-S*0.56); ctx.stroke();
+    // Finial ball on top
+    body(()=>ctx.arc(0,top+S*0.06,S*0.052,0,Math.PI*2), radG(-S*0.02,top+S*0.04,S*0.052));
+    // Shine
+    ctx.fillStyle=shine;
+    ctx.beginPath(); ctx.ellipse(-S*0.045,-S*0.58,S*0.048,S*0.032,-0.4,0,Math.PI*2); ctx.fill();
+    drawBase(S*0.37);
+  }
+
+  // ════════════════════════════════════════
+  // QUEEN — globe body with 5 crown balls
+  // ════════════════════════════════════════
+  else if(p==='q'){
+    const globeY=-S*0.52, globeR=S*0.185;
+    drawNeck(S*0.10, -S*0.08, -S*0.14);
+    collar(-S*0.08, S*0.190, S*0.056);
+    // Lower body — curves in to waist
+    body(()=>{
+      ctx.moveTo(-S*0.19,-S*0.14); ctx.lineTo(S*0.19,-S*0.14);
+      ctx.bezierCurveTo(S*0.19,-S*0.14,S*0.13,-S*0.28,S*0.10,-S*0.38);
+      ctx.lineTo(-S*0.10,-S*0.38);
+      ctx.bezierCurveTo(-S*0.13,-S*0.28,-S*0.19,-S*0.14,-S*0.19,-S*0.14);
+      ctx.closePath();
+    }, linG(0,-S*0.14,0,-S*0.38));
+    // Waist collar
+    collar(-S*0.38, S*0.125, S*0.040);
+    // Globe
+    body(()=>ctx.arc(0,globeY,globeR,0,Math.PI*2), radG(-globeR*0.40,-globeY-S*0.08,globeR));
+    // 5 crown balls atop
+    const ballR=S*0.048;
+    [-S*0.14,-S*0.07,0,S*0.07,S*0.14].forEach((bx,i)=>{
+      const by=globeY-globeR-(i===2?S*0.10:i%2===0?S*0.02:S*0.06);
+      body(()=>ctx.arc(bx,by,ballR,0,Math.PI*2), radG(bx-ballR*0.4,by-ballR*0.4,ballR));
+    });
+    // Shine
+    ctx.fillStyle=shine;
+    ctx.beginPath(); ctx.ellipse(-globeR*0.40,globeY-globeR*0.30,globeR*0.38,globeR*0.24,-0.4,0,Math.PI*2); ctx.fill();
+    drawBase(S*0.46);
+  }
+
+  // ════════════════════════════════════════
+  // KING — globe + cross on top
+  // ════════════════════════════════════════
+  else if(p==='k'){
+    const globeY=-S*0.54, globeR=S*0.185;
+    drawNeck(S*0.11, -S*0.08, -S*0.14);
+    collar(-S*0.08, S*0.205, S*0.060);
+    // Lower body — wider than queen
+    body(()=>{
+      ctx.moveTo(-S*0.205,-S*0.14); ctx.lineTo(S*0.205,-S*0.14);
+      ctx.bezierCurveTo(S*0.205,-S*0.14,S*0.14,-S*0.28,S*0.11,-S*0.40);
+      ctx.lineTo(-S*0.11,-S*0.40);
+      ctx.bezierCurveTo(-S*0.14,-S*0.28,-S*0.205,-S*0.14,-S*0.205,-S*0.14);
+      ctx.closePath();
+    }, linG(0,-S*0.14,0,-S*0.40));
+    // Waist collar
+    collar(-S*0.40, S*0.135, S*0.044);
+    // Globe
+    body(()=>ctx.arc(0,globeY,globeR,0,Math.PI*2), radG(-globeR*0.40,globeY-S*0.06,globeR));
+    // Cross vertical bar
+    const crossTop=globeY-globeR-S*0.22, crossW=S*0.050, crossH=S*0.22;
+    body(()=>ctx.rect(-crossW/2,crossTop,crossW,crossH));
+    // Cross horizontal bar
+    body(()=>ctx.rect(-S*0.115,crossTop+crossH*0.30,S*0.23,S*0.058));
+    // Shine on globe
+    ctx.fillStyle=shine;
+    ctx.beginPath(); ctx.ellipse(-globeR*0.40,globeY-globeR*0.32,globeR*0.38,globeR*0.24,-0.4,0,Math.PI*2); ctx.fill();
+    drawBase(S*0.50);
+  }
+
+  ctx.restore();
+}
+
+function drawChess(){
+  const canvas=document.getElementById('chess-board');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  const cellSize=90;
+  ctx.clearRect(0,0,W,H);
+
+  // === PREMIUM DARK CHESS BOARD ===
+  // Outer dark frame
+  const framGrad=ctx.createLinearGradient(0,0,W,H);
+  framGrad.addColorStop(0,'#1a1200');framGrad.addColorStop(0.5,'#2a1e00');framGrad.addColorStop(1,'#1a1200');
+  ctx.fillStyle=framGrad;ctx.fillRect(0,0,W,H);
+
+  for(let r=0;r<8;r++){
+    for(let c=0;c<8;c++){
+      const x=c*cellSize,y=r*cellSize;
+      const isLight=(r+c)%2===0;
+
+      // Premium dark squares — deep navy-black / rich gold-amber
+      if(isLight){
+        const lg=ctx.createLinearGradient(x,y,x+cellSize,y+cellSize);
+        lg.addColorStop(0,'#c8a84b');lg.addColorStop(0.5,'#e8c870');lg.addColorStop(1,'#b89030');
+        ctx.fillStyle=lg;
+      } else {
+        const dg=ctx.createLinearGradient(x,y,x+cellSize,y+cellSize);
+        dg.addColorStop(0,'#1a1408');dg.addColorStop(0.5,'#221c0a');dg.addColorStop(1,'#120e04');
+        ctx.fillStyle=dg;
+      }
+      ctx.fillRect(x,y,cellSize,cellSize);
+
+      // Subtle inner highlight
+      if(isLight){
+        ctx.save();ctx.globalAlpha=0.12;
+        ctx.fillStyle='#fff';
+        ctx.fillRect(x+1,y+1,cellSize-2,6);
+        ctx.restore();
+      }
+
+      // Selection highlight — neon yellow glow
+      if(chessState.selected&&chessState.selected[0]===r&&chessState.selected[1]===c){
+        ctx.fillStyle='rgba(255,230,0,0.38)';ctx.fillRect(x,y,cellSize,cellSize);
+        ctx.shadowColor='#ffee00';ctx.shadowBlur=16;
+        ctx.strokeStyle='rgba(255,230,0,0.8)';ctx.lineWidth=2.5;
+        ctx.strokeRect(x+1,y+1,cellSize-2,cellSize-2);
+        ctx.shadowBlur=0;
+      }
+
+      // Valid move indicators — neon blue dots/highlights
+      const isValid=chessState.validMoves.some(m=>m.r===r&&m.c===c);
+      if(isValid){
+        const piece=chessState.board[r][c];
+        if(piece){
+          ctx.fillStyle='rgba(255,60,40,0.32)';ctx.fillRect(x,y,cellSize,cellSize);
+          ctx.shadowColor='#ff3030';ctx.shadowBlur=12;
+          ctx.strokeStyle='rgba(255,60,40,0.8)';ctx.lineWidth=2.5;
+          ctx.strokeRect(x+1,y+1,cellSize-2,cellSize-2);
+          ctx.shadowBlur=0;
+        } else {
+          ctx.shadowColor='#4d96ff';ctx.shadowBlur=10;
+          ctx.fillStyle='rgba(77,150,255,0.55)';
+          ctx.beginPath();ctx.arc(x+cellSize/2,y+cellSize/2,11,0,Math.PI*2);ctx.fill();
+          ctx.shadowBlur=0;
+          ctx.fillStyle='rgba(77,150,255,0.2)';
+          ctx.beginPath();ctx.arc(x+cellSize/2,y+cellSize/2,18,0,Math.PI*2);ctx.fill();
+        }
+      }
+    }
+  }
+
+  // Board neon border
+  ctx.shadowColor='#ffd700';ctx.shadowBlur=20;
+  ctx.strokeStyle='#d4a820';ctx.lineWidth=4;
+  ctx.strokeRect(0,0,W,H);
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(255,215,0,0.25)';ctx.lineWidth=1.5;
+  ctx.strokeRect(3,3,W-6,H-6);
+
+  // Coordinates — bright neon
+  const files='abcdefgh',ranks='87654321';
+  for(let i=0;i<8;i++){
+    ctx.font='bold 11px "Nunito",sans-serif';
+    ctx.fillStyle=(i%2===0)?'rgba(255,215,0,0.6)':'rgba(200,160,30,0.5)';
+    ctx.textAlign='left';ctx.textBaseline='bottom';
+    ctx.fillText(ranks[i],3,i*cellSize+cellSize-2);
+    ctx.textAlign='right';ctx.textBaseline='top';
+    ctx.fillText(files[i],i*cellSize+cellSize-3,3);
+  }
+
+  // Draw pieces
+  for(let r=0;r<8;r++){
+    for(let c=0;c<8;c++){
+      const piece=chessState.board[r][c];
+      if(!piece)continue;
+      const x=c*cellSize, y=r*cellSize;
+      const isW=piece===piece.toUpperCase();
+      const cx=x+cellSize/2, cy=y+cellSize/2;
+      // Piece shadow — neon glow
+      ctx.shadowColor=isW?'rgba(255,240,180,0.4)':'rgba(255,100,100,0.3)';
+      ctx.shadowBlur=8;
+      ctx.fillStyle='rgba(0,0,0,0.3)';
+      ctx.beginPath();ctx.ellipse(cx+2,y+cellSize*0.92,cellSize*0.26,cellSize*0.05,0,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;
+      drawChessPiece(ctx, piece, isW, cx, cy, cellSize);
+    }
+  }
+}
+
+// =========================================================
+// ======================= CARROM ==========================
+// =========================================================
+let carromState={};
+const C_W=520,C_H=520;
+const POCKETS=[{x:50,y:50},{x:C_W-50,y:50},{x:50,y:C_H-50},{x:C_W-50,y:C_H-50}];
+const BOARD_MARGIN=45;
+
+// Player configs: name, color, striker position function
+// P1=bottom, P2=top, P3=left, P4=right
+const CARROM_PLAYERS=[
+  {name:'Player 1', color:'#e74c3c', side:'bottom'},
+  {name:'Player 2', color:'#2980b9', side:'top'},
+  {name:'Player 3', color:'#27ae60', side:'left'},
+  {name:'Player 4', color:'#f39c12', side:'right'},
+];
+
+function carromStrikerPos(side){
+  const cx=C_W/2, cy=C_H/2;
+  if(side==='bottom') return {x:cx, y:cy+155};
+  if(side==='top')    return {x:cx, y:cy-155};
+  if(side==='left')   return {x:cx-155, y:cy};
+  if(side==='right')  return {x:cx+155, y:cy};
+}
+
+function startCarromGame(n){
+  document.getElementById('carrom-player-select').style.display='none';
+  initCarrom(n);
+}
+
+function initCarrom(numPlayers){
+  numPlayers = numPlayers || 2;
+  const cx=C_W/2, cy=C_H/2;
+  const activePlayers = CARROM_PLAYERS.slice(0, numPlayers);
+  const playerNames = activePlayers.map((p,i)=> carromAIMode && i>0 ? `🤖 AI ${i+1}` : p.name);
+  carromState={
+    players:numPlayers,
+    current:0,
+    scores:Array(numPlayers).fill(0),
+    playerNames: playerNames,
+    playerColors: activePlayers.map(p=>p.color),
+    playerSides: activePlayers.map(p=>p.side),
+    pieces:[],striker:null,
+    aimAngle:Math.PI/4, power:5,
+    animating:false,
+    pocketedThisTurn:[],
+  };
+  const s=carromState;
+  // Queen (red)
+  s.pieces.push({x:cx,y:cy,r:14,color:'#c0392b',type:'queen',active:true,vx:0,vy:0});
+  // White pieces inner ring
+  const angles=[0,40,80,120,160,200,240,280,320];
+  angles.forEach(a=>{
+    const rad=a*Math.PI/180;
+    s.pieces.push({x:cx+42*Math.cos(rad),y:cy+42*Math.sin(rad),r:13,color:'white',type:'white',active:true,vx:0,vy:0});
+  });
+  // Black pieces outer ring
+  const angles2=[20,60,100,140,180,220,260,300,340];
+  angles2.forEach(a=>{
+    const rad=a*Math.PI/180;
+    s.pieces.push({x:cx+76*Math.cos(rad),y:cy+76*Math.sin(rad),r:13,color:'black',type:'black',active:true,vx:0,vy:0});
+  });
+  // Set striker for current player
+  const sp=carromStrikerPos(s.playerSides[0]);
+  s.striker={x:sp.x,y:sp.y,r:20,color:'#ffffff',type:'striker',active:true,vx:0,vy:0};
+  // Default aim: from striker toward center
+  s.aimAngle=Math.atan2(cy-sp.y, cx-sp.x);
+
+  document.getElementById('carrom-board').onclick=carromAim;
+  document.getElementById('carrom-board').onmousemove=carromPreviewAim;
+  updateCarromInfo();
+  drawCarrom();
+  document.getElementById('carrom-status').textContent=s.playerNames[0]+"'s turn — click board to aim, then Strike!";
+}
+
+function updateCarromInfo(){
+  const s=carromState;
+  document.getElementById('carrom-info').innerHTML=
+    s.playerNames.map((n,i)=>`
+    <div class="carrom-player-info ${s.current===i?'active-turn':''}"
+         style="border-color:${s.current===i?s.playerColors[i]:'transparent'}">
+      <span style="color:${s.playerColors[i]}">●</span> ${n}: ${s.scores[i]} pts
+    </div>`).join('');
+}
+
+function carromGetCanvasXY(e){
+  const canvas=document.getElementById('carrom-board');
+  const rect=canvas.getBoundingClientRect();
+  const scaleX=canvas.width/rect.width;
+  const scaleY=canvas.height/rect.height;
+  return {
+    mx:(e.clientX-rect.left)*scaleX,
+    my:(e.clientY-rect.top)*scaleY
+  };
+}
+
+function carromPreviewAim(e){
+  if(carromState.animating)return;
+  const {mx,my}=carromGetCanvasXY(e);
+  const sx=carromState.striker.x, sy=carromState.striker.y;
+  carromState.aimAngle=Math.atan2(my-sy,mx-sx);
+  document.getElementById('aim-display').textContent=`Aim: ${Math.round(carromState.aimAngle*180/Math.PI)}°`;
+  drawCarrom();
+}
+
+function carromAim(e){
+  if(carromState.animating)return;
+  const {mx,my}=carromGetCanvasXY(e);
+  const sx=carromState.striker.x, sy=carromState.striker.y;
+  carromState.aimAngle=Math.atan2(my-sy,mx-sx);
+  document.getElementById('aim-display').textContent=`Aim: ${Math.round(carromState.aimAngle*180/Math.PI)}°`;
+  drawCarrom();
+}
+
+function carromStrike(){
+  if(carromState.animating)return;
+  const s=carromState;
+  const power=parseInt(document.getElementById('power-slider').value);
+  const speed=power*3;
+  s.striker.vx=Math.cos(s.aimAngle)*speed;
+  s.striker.vy=Math.sin(s.aimAngle)*speed;
+  s.animating=true;
+  s.pocketedThisTurn=[];
+  carromAnimate();
+}
+
+function carromAnimate(){
+  const s=carromState;
+  const allPieces=[...s.pieces,s.striker];
+  const friction=0.985;
+  let anyMoving=false;
+
+  allPieces.forEach(p=>{
+    if(!p.active)return;
+    if(Math.abs(p.vx)<0.05&&Math.abs(p.vy)<0.05){p.vx=0;p.vy=0;return;}
+    anyMoving=true;
+    p.x+=p.vx; p.y+=p.vy;
+    p.vx*=friction; p.vy*=friction;
+
+    // Wall bounce
+    if(p.x-p.r<BOARD_MARGIN){p.x=BOARD_MARGIN+p.r;p.vx=Math.abs(p.vx)*0.8;}
+    if(p.x+p.r>C_W-BOARD_MARGIN){p.x=C_W-BOARD_MARGIN-p.r;p.vx=-Math.abs(p.vx)*0.8;}
+    if(p.y-p.r<BOARD_MARGIN){p.y=BOARD_MARGIN+p.r;p.vy=Math.abs(p.vy)*0.8;}
+    if(p.y+p.r>C_H-BOARD_MARGIN){p.y=C_H-BOARD_MARGIN-p.r;p.vy=-Math.abs(p.vy)*0.8;}
+
+    // Pocket check
+    POCKETS.forEach(pocket=>{
+      if(!p.active)return;
+      const dist=Math.hypot(p.x-pocket.x,p.y-pocket.y);
+      if(dist<25){
+        p.active=false; p.vx=0; p.vy=0;
+        if(p.type!=='striker'){
+          s.pocketedThisTurn.push(p.type);
+          const pts=p.type==='queen'?5:1;
+          s.scores[s.current]+=pts;
+        } else {
+          s.scores[s.current]=Math.max(0,s.scores[s.current]-1);
+        }
+      }
+    });
+  });
+
+  // Piece-piece collisions
+  for(let i=0;i<allPieces.length;i++){
+    for(let j=i+1;j<allPieces.length;j++){
+      const a=allPieces[i],b=allPieces[j];
+      if(!a.active||!b.active)continue;
+      const dx=b.x-a.x,dy=b.y-a.y;
+      const dist=Math.hypot(dx,dy);
+      const minD=a.r+b.r;
+      if(dist<minD&&dist>0){
+        const nx=dx/dist,ny=dy/dist;
+        const sep=(minD-dist)/2;
+        a.x-=nx*sep;a.y-=ny*sep;
+        b.x+=nx*sep;b.y+=ny*sep;
+        const relVx=a.vx-b.vx,relVy=a.vy-b.vy;
+        const dot=relVx*nx+relVy*ny;
+        if(dot>0){a.vx-=dot*nx;a.vy-=dot*ny;b.vx+=dot*nx;b.vy+=dot*ny;}
+      }
+    }
+  }
+
+  drawCarrom();
+
+  if(anyMoving){
+    requestAnimationFrame(carromAnimate);
+  } else {
+    s.animating=false;
+    // Move to next player
+    s.current=(s.current+1)%s.players;
+    // Reposition striker for next player
+    s.striker.active=true;
+    const sp=carromStrikerPos(s.playerSides[s.current]);
+    s.striker.x=sp.x; s.striker.y=sp.y;
+    s.striker.vx=0; s.striker.vy=0;
+    // Default aim toward center
+    s.aimAngle=Math.atan2(C_H/2-sp.y, C_W/2-sp.x);
+    updateCarromInfo();
+
+    const activePieces=s.pieces.filter(p=>p.active&&p.type!=='queen');
+    if(activePieces.length===0){
+      // find winner
+      const maxScore=Math.max(...s.scores);
+      const winnerIdx=s.scores.indexOf(maxScore);
+      document.getElementById('carrom-status').textContent=
+        `🏆 ${s.playerNames[winnerIdx]} WINS! Final scores: ${s.playerNames.map((n,i)=>n+': '+s.scores[i]).join(' | ')}`;
+    } else {
+      const msg=s.pocketedThisTurn.length>0?`Pocketed: ${s.pocketedThisTurn.join(', ')}! `:'';
+      if(carromIsAITurn()){
+        document.getElementById('carrom-status').textContent=msg+`🤖 ${s.playerNames[s.current]} (AI) is thinking...`;
+        setTimeout(()=>carromAIThink(),500);
+      } else {
+        document.getElementById('carrom-status').textContent=
+          msg+s.playerNames[s.current]+"'s turn — aim from the "+s.playerSides[s.current]+"!";
+      }
+    }
+    drawCarrom();
+  }
+}
+
+function drawCarrom(){
+  const canvas=document.getElementById('carrom-board');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // === PREMIUM DARK CARROM BOARD ===
+  // Deep space background
+  const bgG=ctx.createRadialGradient(W/2,H/2,30,W/2,H/2,W*0.75);
+  bgG.addColorStop(0,'#0e0820');bgG.addColorStop(0.5,'#08051a');bgG.addColorStop(1,'#040210');
+  ctx.fillStyle=bgG;ctx.roundRect(0,0,W,H,14);ctx.fill();
+
+  // Outer neon frame — purple
+  ctx.shadowColor='#c77dff';ctx.shadowBlur=24;
+  ctx.strokeStyle='#9944cc';ctx.lineWidth=8;
+  ctx.roundRect(4,4,W-8,H-8,12);ctx.stroke();
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(200,120,255,0.25)';ctx.lineWidth=3;
+  ctx.roundRect(10,10,W-20,H-20,9);ctx.stroke();
+
+  // Inner play area
+  const m=BOARD_MARGIN;
+  const igG=ctx.createLinearGradient(m,m,W-m,H-m);
+  igG.addColorStop(0,'#100c2a');igG.addColorStop(0.5,'#180d38');igG.addColorStop(1,'#100c2a');
+  ctx.fillStyle=igG;
+  ctx.fillRect(m,m,W-2*m,H-2*m);
+
+  // Inner border neon
+  ctx.shadowColor='#8844cc';ctx.shadowBlur=12;
+  ctx.strokeStyle='#7733aa';ctx.lineWidth=2.5;
+  ctx.strokeRect(m,m,W-2*m,H-2*m);
+  ctx.shadowBlur=0;
+
+  // Center circles — neon mandala rings
+  const cx=W/2,cy=H/2;
+  [80,50,20].forEach((r,idx)=>{
+    const colors=['rgba(200,120,255,0.3)','rgba(150,80,255,0.4)','rgba(255,100,200,0.5)'];
+    ctx.shadowColor='#c77dff';ctx.shadowBlur=8;
+    ctx.strokeStyle=colors[idx];ctx.lineWidth=idx===2?2:1.5;
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+  });
+  ctx.shadowBlur=0;
+
+  // Diagonal lines — subtle neon
+  ctx.strokeStyle='rgba(150,80,255,0.18)';ctx.lineWidth=1;
+  [[m,m,W-m,H-m],[W-m,m,m,H-m]].forEach(([x1,y1,x2,y2])=>{
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  });
+
+  // Cross lines
+  ctx.strokeStyle='rgba(150,80,255,0.12)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx,m);ctx.lineTo(cx,H-m);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(m,cy);ctx.lineTo(W-m,cy);ctx.stroke();
+
+  // === Draw striker lane indicators ===
+  const s=carromState;
+  if(s.playerSides){
+    s.playerSides.forEach((side,i)=>{
+      const col=s.playerColors[i];
+      const isActive=s.current===i&&!s.animating;
+      ctx.save();
+      ctx.globalAlpha=isActive?0.7:0.22;
+      ctx.strokeStyle=col;
+      ctx.lineWidth=isActive?4:2;
+      ctx.setLineDash([6,5]);
+      if(side==='bottom'){
+        ctx.beginPath();ctx.moveTo(m+20,H-m+15);ctx.lineTo(W-m-20,H-m+15);ctx.stroke();
+        ctx.globalAlpha=isActive?1:0.4;
+        ctx.font=`bold 10px Nunito`;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillStyle=col;
+        if(isActive){ctx.shadowColor=col;ctx.shadowBlur=8;}
+        ctx.fillText(s.playerNames[i],W/2,H-m+20);
+      } else if(side==='top'){
+        ctx.beginPath();ctx.moveTo(m+20,m-15);ctx.lineTo(W-m-20,m-15);ctx.stroke();
+        ctx.globalAlpha=isActive?1:0.4;
+        ctx.font=`bold 10px Nunito`;ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillStyle=col;
+        if(isActive){ctx.shadowColor=col;ctx.shadowBlur=8;}
+        ctx.fillText(s.playerNames[i],W/2,m-18);
+      } else if(side==='left'){
+        ctx.beginPath();ctx.moveTo(m-15,m+20);ctx.lineTo(m-15,H-m-20);ctx.stroke();
+        ctx.globalAlpha=isActive?1:0.4;
+        ctx.save();ctx.translate(m-20,H/2);ctx.rotate(-Math.PI/2);
+        ctx.font=`bold 10px Nunito`;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillStyle=col;
+        ctx.fillText(s.playerNames[i],0,0);ctx.restore();
+      } else if(side==='right'){
+        ctx.beginPath();ctx.moveTo(W-m+15,m+20);ctx.lineTo(W-m+15,H-m-20);ctx.stroke();
+        ctx.globalAlpha=isActive?1:0.4;
+        ctx.save();ctx.translate(W-m+20,H/2);ctx.rotate(Math.PI/2);
+        ctx.font=`bold 10px Nunito`;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillStyle=col;
+        ctx.fillText(s.playerNames[i],0,0);ctx.restore();
+      }
+      ctx.setLineDash([]);
+      ctx.restore();
+    });
+  }
+
+  // Pockets — neon dark holes
+  POCKETS.forEach(p=>{
+    const pg=ctx.createRadialGradient(p.x,p.y,2,p.x,p.y,22);
+    pg.addColorStop(0,'#000');pg.addColorStop(1,'#1a0a30');
+    ctx.fillStyle=pg;
+    ctx.beginPath();ctx.arc(p.x,p.y,22,0,Math.PI*2);ctx.fill();
+    ctx.shadowColor='#c77dff';ctx.shadowBlur=10;
+    ctx.strokeStyle='#9933cc';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.arc(p.x,p.y,22,0,Math.PI*2);ctx.stroke();
+    ctx.shadowBlur=0;
+    // Inner glow
+    ctx.strokeStyle='rgba(200,100,255,0.3)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(p.x,p.y,16,0,Math.PI*2);ctx.stroke();
+  });
+
+  // Aim line — neon glow
+  if(!carromState.animating&&carromState.striker&&carromState.striker.active){
+    const sx=carromState.striker.x,sy=carromState.striker.y;
+    const angle=carromState.aimAngle;
+    const len=130;
+    const activeColor=s.playerColors?s.playerColors[s.current]:'#ffffff';
+    ctx.shadowColor=activeColor;ctx.shadowBlur=10;
+    ctx.strokeStyle=activeColor+'bb';ctx.lineWidth=2;ctx.setLineDash([7,5]);
+    ctx.beginPath();ctx.moveTo(sx,sy);
+    ctx.lineTo(sx+Math.cos(angle)*len,sy+Math.sin(angle)*len);
+    ctx.stroke();ctx.setLineDash([]);ctx.shadowBlur=0;
+    // Arrow tip glow
+    ctx.shadowColor=activeColor;ctx.shadowBlur=8;
+    ctx.fillStyle=activeColor+'ee';
+    ctx.save();ctx.translate(sx+Math.cos(angle)*len,sy+Math.sin(angle)*len);ctx.rotate(angle);
+    ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-5,-5);ctx.lineTo(-5,5);ctx.closePath();ctx.fill();
+    ctx.restore();ctx.shadowBlur=0;
+  }
+
+  // Helper: draw crisp bold H
+  function drawH(r, fillColor){
+    ctx.save();
+    ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+    const fs=Math.round(r*1.6);
+    ctx.font="900 "+fs+"px 'Arial Black',Arial,sans-serif";
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=fillColor;
+    ctx.fillText('H',0,1);
+    ctx.restore();
+  }
+
+  // Draw pieces
+  [...carromState.pieces,carromState.striker].forEach(p=>{
+    if(!p.active)return;
+    ctx.save();
+    ctx.translate(p.x,p.y);
+    ctx.shadowBlur=16;ctx.shadowColor='rgba(0,0,0,0.65)';ctx.shadowOffsetX=0;ctx.shadowOffsetY=5;
+
+    if(p.type==='white'){
+      const g=ctx.createRadialGradient(0,0,1,0,0,p.r);
+      g.addColorStop(0,'#fffef0');g.addColorStop(.6,'#f0e0b0');g.addColorStop(1,'#bba870');
+      ctx.fillStyle=g;
+      ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+      ctx.strokeStyle='#8a7040';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.stroke();
+      ctx.fillStyle='#111111';
+      ctx.beginPath();ctx.arc(0,0,p.r*.70,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#333333';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(0,0,p.r*.70,0,Math.PI*2);ctx.stroke();
+      drawH(p.r*.58,'#ffffff');
+
+    } else if(p.type==='black'){
+      const g=ctx.createRadialGradient(0,0,1,0,0,p.r);
+      g.addColorStop(0,'#2a2a2a');g.addColorStop(.5,'#181818');g.addColorStop(1,'#060606');
+      ctx.fillStyle=g;
+      ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+      ctx.strokeStyle='#444444';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.stroke();
+      const ig=ctx.createRadialGradient(0,0,1,0,0,p.r*.70);
+      ig.addColorStop(0,'#ffffff');ig.addColorStop(.7,'#e8e8e8');ig.addColorStop(1,'#cccccc');
+      ctx.fillStyle=ig;
+      ctx.beginPath();ctx.arc(0,0,p.r*.70,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#aaaaaa';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(0,0,p.r*.70,0,Math.PI*2);ctx.stroke();
+      drawH(p.r*.58,'#111111');
+
+    } else if(p.type==='queen'){
+      const g=ctx.createRadialGradient(0,0,1,0,0,p.r);
+      g.addColorStop(0,'#8b2020');g.addColorStop(.4,'#6a1010');g.addColorStop(.8,'#4a0808');g.addColorStop(1,'#2c0404');
+      ctx.fillStyle=g;
+      ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+      ctx.strokeStyle='#c8960c';ctx.lineWidth=3;
+      ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle='#e8b820';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(0,0,p.r*.80,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle='#f8d840';ctx.lineWidth=1;ctx.setLineDash([2,2]);
+      ctx.beginPath();ctx.arc(0,0,p.r*.72,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='#380808';
+      ctx.beginPath();ctx.arc(0,0,p.r*.65,0,Math.PI*2);ctx.fill();
+      drawH(p.r*.56,'#e8c030');
+
+    } else if(p.type==='striker'){
+      const playerColor = carromState.playerColors ? carromState.playerColors[carromState.current] : '#4488ff';
+      const g=ctx.createRadialGradient(0,0,1,0,0,p.r);
+      g.addColorStop(0,'#fffef0');g.addColorStop(.6,'#f0e0b0');g.addColorStop(1,'#bba870');
+      ctx.fillStyle=g;
+      ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+      ctx.strokeStyle=playerColor;ctx.lineWidth=3;
+      ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.stroke();
+      const ig=ctx.createRadialGradient(0,0,1,0,0,p.r*.70);
+      ig.addColorStop(0,playerColor+'ff');ig.addColorStop(.7,playerColor+'cc');ig.addColorStop(1,playerColor+'88');
+      ctx.fillStyle=ig;
+      ctx.beginPath();ctx.arc(0,0,p.r*.70,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle=playerColor+'bb';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(0,0,p.r*.70,0,Math.PI*2);ctx.stroke();
+      drawH(p.r*.58,'#ffffff');
+    }
+    ctx.restore();
+  });
+
+  // Scores overlay (dynamic height for multiple players)
+  const numP=carromState.scores?carromState.scores.length:2;
+  const boxH=16+numP*18;
+  ctx.fillStyle='rgba(0,0,0,0.65)';ctx.roundRect(m+5,m+5,130,boxH,8);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='700 12px Nunito';ctx.textAlign='left';ctx.textBaseline='top';
+  (carromState.playerNames||['P1','P2']).forEach((name,i)=>{
+    const col=carromState.playerColors?carromState.playerColors[i]:'#fff';
+    ctx.fillStyle=col;
+    ctx.fillText(`${name}: ${carromState.scores[i]} pts`,m+10,m+8+i*18);
+  });
+}
+
+// ===== SNAKE AI =====
+let snakeAIMode = false;
+function toggleSnakeAI(){
+  snakeAIMode = !snakeAIMode;
+  const knob=document.getElementById('snake-ai-knob');
+  const tog=document.getElementById('snake-ai-toggle');
+  const lbl=document.getElementById('snake-ai-label');
+  const hint=document.getElementById('snake-ai-hint');
+  if(snakeAIMode){
+    tog.style.background='#6bcb77'; knob.style.left='22px';
+    lbl.textContent='On'; hint.style.color='rgba(107,203,119,0.8)';
+  } else {
+    tog.style.background='#333'; knob.style.left='1px';
+    lbl.textContent='Off'; hint.style.color='rgba(107,203,119,0)';
+  }
+}
+
+function snakeIsAITurn(){ return snakeAIMode && snakeState.current !== 0; }
+
+function snakeAIRoll(){
+  const s=snakeState;
+  if(s.rolled)return;
+  const val=Math.floor(Math.random()*6)+1;
+  s.rolled=true;
+  animateDice('snake-dice',val,()=>{
+    let landPos=s.positions[s.current]+val;
+    let msg=`🤖 ${s.names[s.current]} rolled ${val}`;
+    if(landPos>100){
+      landPos=s.positions[s.current];
+      msg+=' — Too high!';
+      s.positions[s.current]=landPos;
+      document.getElementById('snake-status').textContent=msg;
+      drawSnake();updateSnakeInfo();
+      setTimeout(()=>snakeNextTurn(),1200);
+      return;
+    }
+    if(landPos===100){
+      s.positions[s.current]=100;
+      document.getElementById('snake-status').textContent=`🏆 🤖 ${s.names[s.current]} WINS!`;
+      drawSnake();updateSnakeInfo();return;
+    }
+    if(SNAKES[landPos]){
+      const fp=SNAKES[landPos]; msg+=` — SNAKE! 🐍 ${landPos}→${fp}`;
+      document.getElementById('snake-status').textContent=msg;
+      s.positions[s.current]=landPos; drawSnake();updateSnakeInfo();
+      setTimeout(()=>{ snakeAnimateMove(s.current,landPos,fp,'snake',()=>{ s.positions[s.current]=fp; drawSnake();updateSnakeInfo(); setTimeout(()=>snakeNextTurn(),600); }); },400);
+    } else if(LADDERS[landPos]){
+      const fp=LADDERS[landPos]; msg+=` — LADDER! 🪜 ${landPos}→${fp}`;
+      document.getElementById('snake-status').textContent=msg;
+      s.positions[s.current]=landPos; drawSnake();updateSnakeInfo();
+      setTimeout(()=>{ snakeAnimateMove(s.current,landPos,fp,'ladder',()=>{ s.positions[s.current]=fp; drawSnake();updateSnakeInfo(); setTimeout(()=>snakeNextTurn(),600); }); },400);
+    } else {
+      s.positions[s.current]=landPos;
+      document.getElementById('snake-status').textContent=msg;
+      drawSnake();updateSnakeInfo();
+      setTimeout(()=>snakeNextTurn(),1000);
+    }
+  });
+}
+
+// ===== CARROM AI =====
+let carromAIMode = false;
+function toggleCarromAI(){
+  carromAIMode = !carromAIMode;
+  const knob=document.getElementById('carrom-ai-knob');
+  const tog=document.getElementById('carrom-ai-toggle');
+  const lbl=document.getElementById('carrom-ai-label');
+  const hint=document.getElementById('carrom-ai-hint');
+  if(carromAIMode){
+    tog.style.background='#4d96ff'; knob.style.left='22px';
+    lbl.textContent='On'; hint.style.color='rgba(77,150,255,0.8)';
+  } else {
+    tog.style.background='#333'; knob.style.left='1px';
+    lbl.textContent='Off'; hint.style.color='rgba(77,150,255,0)';
+  }
+}
+
+function carromIsAITurn(){ return carromAIMode && carromState.current !== 0; }
+
+async function carromAIThink(){
+  if(!carromIsAITurn()||carromState.animating) return;
+  const s=carromState;
+  document.getElementById('carrom-status').textContent=`🤖 ${s.playerNames[s.current]} (AI) is calculating...`;
+  document.getElementById('strike-btn').disabled=true;
+
+  // Find nearest active piece to aim at
+  const striker=s.striker;
+  const activePieces=s.pieces.filter(p=>p.active);
+
+  // Build a simple board description for AI
+  const pieceDesc=activePieces.map(p=>`${p.type} at (${Math.round(p.x)},${Math.round(p.y)})`).join(', ');
+  const strikerPos=`striker at (${Math.round(striker.x)},${Math.round(striker.y)})`;
+  const pocketDesc=`pockets at corners: (50,50),(470,50),(50,470),(470,470)`;
+  const side=s.playerSides[s.current];
+  const scores=s.playerNames.map((n,i)=>`${n}: ${s.scores[i]}`).join(', ');
+
+  let aiAngle=Math.atan2(C_H/2-striker.y, C_W/2-striker.x);
+  let aiPower=7;
+
+  try {
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:80,
+        system:'You are a carrom board AI. Board is 520x520px. Pockets are at corners near (50,50),(470,50),(50,470),(470,470). Given striker and piece positions, choose the best aim angle (in degrees, 0=right, 90=down, 180=left, 270=up) and power (1-10). Respond ONLY with JSON like {"angle":135,"power":7} and nothing else.',
+        messages:[{role:'user',content:`${strikerPos}. Active pieces: ${pieceDesc}. ${pocketDesc}. Current player side: ${side}. Scores: ${scores}. Choose best angle and power to pocket a piece. Respond with only {"angle":N,"power":N}.`}]
+      })
+    });
+    const data=await resp.json();
+    const txt=(data.content&&data.content[0]&&data.content[0].text)||'{}';
+    const parsed=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    if(typeof parsed.angle==='number') aiAngle=parsed.angle*Math.PI/180;
+    if(typeof parsed.power==='number') aiPower=Math.min(10,Math.max(1,parsed.power));
+  } catch(e){
+    // Fallback: aim at nearest piece
+    if(activePieces.length>0){
+      const nearest=activePieces.reduce((a,b)=>Math.hypot(b.x-striker.x,b.y-striker.y)<Math.hypot(a.x-striker.x,a.y-striker.y)?b:a);
+      aiAngle=Math.atan2(nearest.y-striker.y, nearest.x-striker.x);
+      aiPower=7;
+    }
+  }
+
+  // Visualize aim briefly
+  s.aimAngle=aiAngle;
+  document.getElementById('power-slider').value=aiPower;
+  document.getElementById('aim-display').textContent=`🤖 Aim: ${Math.round(aiAngle*180/Math.PI)}° Power: ${aiPower}`;
+  drawCarrom();
+
+  setTimeout(()=>{
+    s.striker.vx=Math.cos(aiAngle)*aiPower*3;
+    s.striker.vy=Math.sin(aiAngle)*aiPower*3;
+    s.animating=true;
+    s.pocketedThisTurn=[];
+    document.getElementById('strike-btn').disabled=false;
+    carromAnimate();
+  },800);
+}
+
+
+// =====================================================
+// ============= ROOM / MULTIPLAYER SYSTEM =============
+// =====================================================
+
+let roomState = {
+  roomId: null,
+  password: null,
+  game: 'ludo',
+  myName: '',
+  mySlot: null,       // 0 = host, 1,2,3 = guests
+  isHost: false,
+  players: {},
+  ref: null,
+  gameStarted: false,
+};
+
+function generateRoomId(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let id='';for(let i=0;i<6;i++)id+=chars[Math.floor(Math.random()*chars.length)];
+  return id;
+}
+
+function openRoomModal(){
+  document.getElementById('room-modal').classList.add('active');
+  // Pre-fill room ID from URL if present
+  const urlParams=new URLSearchParams(window.location.search);
+  const rid=urlParams.get('room');
+  if(rid){
+    switchRoomTab('join');
+    document.getElementById('join-room-id').value=rid.toUpperCase();
+  }
+}
+function closeRoomModal(){
+  document.getElementById('room-modal').classList.remove('active');
+}
+function switchRoomTab(tab){
+  document.getElementById('tab-create').classList.toggle('active',tab==='create');
+  document.getElementById('tab-join').classList.toggle('active',tab==='join');
+  document.getElementById('panel-create').style.display=tab==='create'?'block':'none';
+  document.getElementById('panel-join').style.display=tab==='join'?'block':'none';
+}
+function selectRoomGame(btn){
+  document.querySelectorAll('.room-game-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  roomState.game=btn.dataset.game;
+}
+
+function setRoomStatus(panel,msg,type='info'){
+  const el=document.getElementById(panel+'-status');
+  el.textContent=msg;el.className='room-status-msg '+type;
+}
+
+async function createRoom(){
+  const name=(document.getElementById('create-name').value||'').trim();
+  if(!name){setRoomStatus('create','Please enter your name','err');return;}
+  const pw=document.getElementById('create-password').value;
+  const rid=generateRoomId();
+  const game=roomState.game;
+
+  document.getElementById('create-room-btn').disabled=true;
+  setRoomStatus('create','Creating room…','info');
+
+  const roomData={
+    id:rid,
+    game:game,
+    password:pw||'',
+    host:name,
+    created:Date.now(),
+    started:false,
+    players:{0:{name:name,slot:0,ready:true,online:true}},
+    gameState:null,
+    moves:[],
+  };
+
+  if(supabase){
+    try{
+      const {error}=await supabase.from('rooms').upsert({
+        id: rid,
+        game: game,
+        password: pw||'',
+        host: name,
+        players: roomData.players,
+        game_state: null,
+        started: false,
+      });
+      if(error) throw error;
+      roomState.roomId=rid;
+      roomState.password=pw||'';
+      roomState.game=game;
+      roomState.myName=name;
+      roomState.mySlot=0;
+      roomState.isHost=true;
+      startListeningRoom(rid);
+    }catch(e){
+      console.error('Supabase createRoom error:',e);
+      useFallbackRoom(rid,roomData);
+    }
+  } else {
+    useFallbackRoom(rid,roomData);
+  }
+
+  // Show room info
+  const shareUrl=window.location.origin+window.location.pathname+'?room='+rid+(pw?'&pw='+encodeURIComponent(pw):'');
+  document.getElementById('display-room-id').textContent=rid;
+  document.getElementById('display-share-link').textContent=shareUrl;
+  document.getElementById('create-info').classList.add('visible');
+  setRoomStatus('create','Room created! Share the link or ID.','ok');
+  document.getElementById('create-room-btn').disabled=false;
+}
+
+function useFallbackRoom(rid,data){
+  // localStorage fallback for demo (same device tab sharing)
+  try{
+    sessionStorage.setItem('hexaRoom_'+rid, JSON.stringify(data));
+  }catch(e){}
+  roomState.roomId=rid;
+  roomState.mySlot=0;
+  roomState.isHost=true;
+  setRoomStatus('create','Room created (local mode — share link works on same device)','ok');
+}
+
+async function joinRoom(){
+  const name=(document.getElementById('join-name').value||'').trim();
+  const rid=(document.getElementById('join-room-id').value||'').trim().toUpperCase();
+  const pw=document.getElementById('join-password').value;
+  if(!name){setRoomStatus('join','Please enter your name','err');return;}
+  if(rid.length!==6){setRoomStatus('join','Room ID must be 6 characters','err');return;}
+
+  document.getElementById('join-room-btn').disabled=true;
+  setRoomStatus('join','Looking for room…','info');
+
+  if(supabase){
+    try{
+      const {data:room, error}=await supabase.from('rooms').select('*').eq('id',rid).single();
+      if(error||!room){setRoomStatus('join','Room not found','err');document.getElementById('join-room-btn').disabled=false;return;}
+      if(room.password&&room.password!==pw){setRoomStatus('join','Wrong password','err');document.getElementById('join-room-btn').disabled=false;return;}
+      if(room.started){setRoomStatus('join','Game already started','err');document.getElementById('join-room-btn').disabled=false;return;}
+      const existingSlots=Object.keys(room.players||{}).map(Number);
+      const nextSlot=existingSlots.length;
+      if(nextSlot>=4){setRoomStatus('join','Room is full','err');document.getElementById('join-room-btn').disabled=false;return;}
+
+      const updatedPlayers={...room.players,[nextSlot]:{name,slot:nextSlot,ready:true,online:true}};
+      const {error:upErr}=await supabase.from('rooms').update({players:updatedPlayers}).eq('id',rid);
+      if(upErr) throw upErr;
+      roomState.roomId=rid;
+      roomState.game=room.game;
+      roomState.myName=name;
+      roomState.mySlot=nextSlot;
+      roomState.isHost=false;
+      startListeningRoom(rid);
+      setRoomStatus('join','Joined! Waiting for host to start…','ok');
+      closeRoomModal();
+      launchOnlineGame(room.game, rid);
+    }catch(e){
+      console.error('Supabase joinRoom error:',e);
+      joinFallbackRoom(rid,pw,name);
+    }
+  } else {
+    joinFallbackRoom(rid,pw,name);
+  }
+  document.getElementById('join-room-btn').disabled=false;
+}
+
+function joinFallbackRoom(rid,pw,name){
+  try{
+    const raw=sessionStorage.getItem('hexaRoom_'+rid);
+    if(!raw){setRoomStatus('join','Room not found (try same browser)','err');return;}
+    const room=JSON.parse(raw);
+    if(room.password&&room.password!==pw){setRoomStatus('join','Wrong password','err');return;}
+    const slot=Object.keys(room.players||{}).length;
+    room.players[slot]={name,slot,ready:true,online:true};
+    sessionStorage.setItem('hexaRoom_'+rid, JSON.stringify(room));
+    roomState.roomId=rid;
+    roomState.game=room.game;
+    roomState.myName=name;
+    roomState.mySlot=slot;
+    roomState.isHost=false;
+    setRoomStatus('join','Joined room! Starting game…','ok');
+    closeRoomModal();
+    launchOnlineGame(room.game,rid);
+  }catch(e){setRoomStatus('join','Could not join room','err');}
+}
+
+function startListeningRoom(rid){
+  if(!supabase)return;
+  // Unsubscribe any existing channel
+  if(roomState.ref){try{supabase.removeChannel(roomState.ref);}catch(e){}}
+  const channel=supabase.channel('room-'+rid)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'rooms',filter:'id=eq.'+rid},payload=>{
+      const room=payload.new;
+      if(!room)return;
+      const playerCount=Object.keys(room.players||{}).length;
+      if(roomState.isHost){
+        const waitEl=document.querySelector('#create-info .room-waiting');
+        if(waitEl) waitEl.textContent=playerCount+' player(s) in room. '+(!room.started?'Waiting…':'Game started!');
+        if(playerCount>=2&&!room.started){
+          showStartRoomBtn(rid, room.game, playerCount);
+        }
+      }
+      if(!roomState.isHost&&room.game_state&&room.started){
+        syncOnlineGameState(room.game, room.game_state);
+      }
+    })
+    .subscribe();
+  roomState.ref=channel;
+}
+
+function showStartRoomBtn(rid, game, count){
+  const info=document.getElementById('create-info');
+  let sbtn=document.getElementById('start-room-game-btn');
+  if(!sbtn){
+    sbtn=document.createElement('button');
+    sbtn.id='start-room-game-btn';
+    sbtn.className='room-action-btn';
+    sbtn.style.marginTop='0.8rem';
+    sbtn.style.background='linear-gradient(135deg,#6bcb77,#2ed573,#6bcb77)';
+    info.appendChild(sbtn);
+  }
+  sbtn.textContent='▶ Start Game ('+count+' players)';
+  sbtn.onclick=()=>{
+    if(supabase) supabase.from('rooms').update({started:true}).eq('id',rid).then(()=>{});
+    closeRoomModal();
+    launchOnlineGame(game, rid);
+  };
+}
+
+function launchOnlineGame(game, rid){
+  const statusBar=document.getElementById('online-players-bar');
+  if(statusBar){statusBar.style.display='block';statusBar.textContent='🌐 Online Room: '+rid+' | Playing: '+game.toUpperCase();}
+  openGame(game);
+  // For 2-player games, auto select 2 players
+  if(game==='ludo') setTimeout(()=>startLudoGame(2),300);
+  else if(game==='snake') setTimeout(()=>startSnakeGame(2),300);
+  else if(game==='carrom') setTimeout(()=>startCarromGame(2),300);
+}
+
+function syncOnlineGameState(game, state){
+  // Sync incoming state from Firebase into local game state
+  // This is a hook — each game can listen and update
+  window.dispatchEvent(new CustomEvent('onlineStateSync',{detail:{game,state}}));
+}
+
+function copyShareLink(){
+  const link=document.getElementById('display-share-link').textContent;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(link).then(()=>{
+      const btn=document.querySelector('.room-copy-btn');
+      const orig=btn.textContent;
+      btn.textContent='✅ Copied!';
+      setTimeout(()=>btn.textContent=orig,2000);
+    });
+  } else {
+    const ta=document.createElement('textarea');
+    ta.value=link;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+  }
+}
+
+// Push a game move to Supabase (called from each game's move handler)
+function pushOnlineMove(moveData){
+  if(!supabase||!roomState.roomId||!roomState.isHost)return;
+  supabase.from('rooms').update({game_state:moveData}).eq('id',roomState.roomId).then(()=>{});
+}
+
+// Auto-open room join if URL has ?room= param
+window.addEventListener('DOMContentLoaded',()=>{
+  const urlParams=new URLSearchParams(window.location.search);
+  const rid=urlParams.get('room');
+  if(rid){
+    setTimeout(()=>openRoomModal(),600);
+  }
+});
+
+// ===== PARTICLE SYSTEM =====
+(function(){
+  const canvas=document.getElementById('particles-canvas');
+  const ctx2=canvas.getContext('2d');
+  const colors=['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#c77dff','#ff8e53'];
+  let W,H,particles=[];
+
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+  resize();window.addEventListener('resize',resize);
+
+  class Particle{
+    constructor(){this.reset()}
+    reset(){
+      this.x=Math.random()*W;
+      this.y=Math.random()*H;
+      this.size=Math.random()*2+.5;
+      this.color=colors[Math.floor(Math.random()*colors.length)];
+      this.speedX=(Math.random()-.5)*.4;
+      this.speedY=-(Math.random()*.6+.2);
+      this.opacity=Math.random()*.6+.2;
+      this.life=0;this.maxLife=Math.random()*200+100;
+    }
+    update(){
+      this.x+=this.speedX;this.y+=this.speedY;this.life++;
+      if(this.life>this.maxLife||this.y<-10)this.reset();
+    }
+    draw(){
+      ctx2.save();ctx2.globalAlpha=this.opacity*(1-this.life/this.maxLife);
+      ctx2.fillStyle=this.color;
+      ctx2.shadowBlur=6;ctx2.shadowColor=this.color;
+      ctx2.beginPath();ctx2.arc(this.x,this.y,this.size,0,Math.PI*2);ctx2.fill();
+      ctx2.restore();
+    }
+  }
+  for(let i=0;i<80;i++)particles.push(new Particle());
+
+  // Also draw twinkling stars
+  const stars=Array.from({length:120},()=>({
+    x:Math.random()*5000,y:Math.random()*5000,
+    r:Math.random()*1.2+.3,
+    twinkle:Math.random()*Math.PI*2,
+    speed:Math.random()*.02+.005
+  }));
+
+  function loop(){
+    ctx2.clearRect(0,0,W,H);
+    // Stars
+    stars.forEach(s=>{
+      s.twinkle+=s.speed;
+      const a=.2+Math.sin(s.twinkle)*.5;
+      ctx2.globalAlpha=Math.max(0,a);
+      ctx2.fillStyle='#fff';
+      ctx2.beginPath();ctx2.arc(s.x%W,s.y%H,s.r,0,Math.PI*2);ctx2.fill();
+    });
+    ctx2.globalAlpha=1;
+    particles.forEach(p=>{p.update();p.draw()});
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>
+</body>
+</html>
