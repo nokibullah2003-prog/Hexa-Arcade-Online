@@ -21,7 +21,6 @@
   --muted:#9d9bc0;
 }
 
-@keyframes rotateBg{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:.7;transform:scale(1.08)}}
 @keyframes floatStar{0%{transform:translateY(0) scale(1);opacity:.8}50%{transform:translateY(-12px) scale(1.1);opacity:1}100%{transform:translateY(0) scale(1);opacity:.8}}
 @keyframes shimmer{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
@@ -70,20 +69,19 @@
 
 body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 
-/* === ANIMATED BACKGROUND === */
+/* === BACKGROUND === */
 body::before{
   content:'';position:fixed;top:0;left:0;width:100%;height:100%;
   background:
-    radial-gradient(ellipse 60% 50% at 15% 40%,rgba(80,20,140,.35) 0%,transparent 70%),
-    radial-gradient(ellipse 50% 45% at 85% 20%,rgba(0,40,100,.4) 0%,transparent 70%),
-    radial-gradient(ellipse 40% 40% at 55% 85%,rgba(10,60,10,.3) 0%,transparent 65%),
-    radial-gradient(ellipse 70% 30% at 50% 50%,rgba(20,10,50,.5) 0%,transparent 80%);
+    radial-gradient(ellipse 60% 50% at 50% 50%, rgba(60,20,140,0.12) 0%, transparent 70%);
   pointer-events:none;z-index:0;
 }
 body::after{
-  content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;
-  background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(77,150,255,.015) 0deg 10deg,transparent 10deg 30deg);
-  animation:rotateBg 60s linear infinite;
+  content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+  background-image:
+    linear-gradient(rgba(77,150,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(77,150,255,0.03) 1px, transparent 1px);
+  background-size:44px 44px;
   pointer-events:none;z-index:0;
 }
 
@@ -200,32 +198,17 @@ body::after{
   --title-grad:linear-gradient(90deg,#4d96ff,#aaccff,#5e60ce);
 }
 
-/* GAME SCREEN */
-.game-screen{display:none;position:fixed;inset:0;z-index:100;flex-direction:column;background-size:400% 400%;animation:bgShift 8s ease infinite;}
+/* GAME SCREEN — unified neon-dark background for all games */
+.game-screen{
+  display:none;position:fixed;inset:0;z-index:100;flex-direction:column;
+  background-color:#06040f;
+  background-image:
+    radial-gradient(ellipse 70% 55% at 50% 50%, rgba(77,50,180,0.07) 0%, transparent 70%),
+    linear-gradient(rgba(77,150,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(77,150,255,0.035) 1px, transparent 1px);
+  background-size:100% 100%, 44px 44px, 44px 44px;
+}
 .game-screen.active{display:flex}
-
-/* Ludo — warm fiery red-orange-purple */
-#ludo-screen{
-  background:linear-gradient(135deg,#1a0030 0%,#3d0050 20%,#7b1a00 45%,#c0390b 65%,#3d0050 85%,#1a0030 100%);
-  background-size:400% 400%;animation:bgShift 8s ease infinite;
-}
-/* Snake — deep jungle green-teal */
-#snake-screen{
-  background:linear-gradient(135deg,#001a0a 0%,#003320 20%,#005c2e 45%,#007a50 65%,#003a3a 85%,#001a0a 100%);
-  background-size:400% 400%;animation:bgShift 9s ease infinite;
-}
-/* Chess — royal navy-gold */
-#chess-screen{
-  background:linear-gradient(135deg,#0a0820 0%,#1a1050 20%,#2a1a70 45%,#3d2a00 65%,#6b4a00 75%,#1a1050 90%,#0a0820 100%);
-  background-size:400% 400%;animation:bgShift 10s ease infinite;
-}
-/* Carrom — ocean blue-cyan-indigo */
-#carrom-screen{
-  background:linear-gradient(135deg,#000a20 0%,#001040 20%,#002060 45%,#003880 60%,#005580 75%,#001040 90%,#000a20 100%);
-  background-size:400% 400%;animation:bgShift 7s ease infinite;
-}
-
-@keyframes bgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 
 .game-header{display:flex;align-items:center;gap:1rem;padding:1rem 1.5rem;
   background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.12);
@@ -774,6 +757,8 @@ try {
     </button>
     <div style="color:rgba(255,255,255,0.25);font-size:.78rem;margin-top:.5rem">Create or join a room to play with friends</div>
   </div>
+</div>
+</div>
 </div>
 </div>
 
