@@ -2110,9 +2110,16 @@ function updateSnakeInfo(){
 
 function snakeRollDice(){
   if(snakeState.rolled)return;
+  // Online: only roll on your turn
+  if(roomState.online){
+    const mySlot=roomState.mySlot;
+    if(snakeState.current!==mySlot){
+      document.getElementById('snake-status').textContent='⏳ Wait for your turn!';
+      return;
+    }
+  }
   const val=Math.floor(Math.random()*6)+1;
   snakeState.rolled=true;
-  if(roomState.online) setTimeout(pushSnakeState,200);
   document.getElementById('snake-roll-btn').disabled=true;
 
   animateDice('snake-dice', val, ()=>{
@@ -2126,13 +2133,13 @@ function snakeRollDice(){
       s.positions[s.current]=landPos;
       document.getElementById('snake-status').textContent=msg;
       drawSnake();updateSnakeInfo();
-      setTimeout(()=>snakeNextTurn(),1200);
+      setTimeout(()=>{snakeNextTurn();if(roomState.online)pushSnakeState();},1200);
       return;
     }
     if(landPos===100){
       s.positions[s.current]=100;
       document.getElementById('snake-status').textContent=`🏆 ${s.names[s.current]} WINS!`;
-      drawSnake();updateSnakeInfo();return;
+      drawSnake();updateSnakeInfo();if(roomState.online)pushSnakeState();return;
     }
 
     if(SNAKES[landPos]){
@@ -2145,7 +2152,7 @@ function snakeRollDice(){
         snakeAnimateMove(s.current, landPos, finalPos, 'snake', ()=>{
           s.positions[s.current]=finalPos;
           drawSnake();updateSnakeInfo();
-          setTimeout(()=>snakeNextTurn(),600);
+          setTimeout(()=>{snakeNextTurn();if(roomState.online)pushSnakeState();},600);
         });
       },400);
     } else if(LADDERS[landPos]){
@@ -2158,14 +2165,14 @@ function snakeRollDice(){
         snakeAnimateMove(s.current, landPos, finalPos, 'ladder', ()=>{
           s.positions[s.current]=finalPos;
           drawSnake();updateSnakeInfo();
-          setTimeout(()=>snakeNextTurn(),600);
+          setTimeout(()=>{snakeNextTurn();if(roomState.online)pushSnakeState();},600);
         });
       },400);
     } else {
       s.positions[s.current]=landPos;
       document.getElementById('snake-status').textContent=msg;
       drawSnake();updateSnakeInfo();
-      setTimeout(()=>snakeNextTurn(),1000);
+      setTimeout(()=>{snakeNextTurn();if(roomState.online)pushSnakeState();},1000);
     }
   });
 }
@@ -2180,6 +2187,10 @@ function snakeNextTurn(){
     document.getElementById('snake-roll-btn').disabled=true;
     document.getElementById('snake-status').textContent=`🤖 ${s.names[s.current]} is rolling...`;
     setTimeout(()=>snakeAIRoll(),700);
+  } else if(roomState.online){
+    const isMyTurn=(s.current===roomState.mySlot);
+    document.getElementById('snake-roll-btn').disabled=!isMyTurn;
+    document.getElementById('snake-status').textContent=isMyTurn?`Your turn! Roll the dice`:`⏳ Opponent's turn…`;
   } else {
     document.getElementById('snake-roll-btn').disabled=false;
     document.getElementById('snake-status').textContent=`${s.names[s.current]}'s turn!`;
@@ -3973,6 +3984,7 @@ function _setAllBars(text){
 }
 
 function _launchGame(game){
+  if(roomState.online) return; // prevent double-launch
   roomState.online=true;
   hideWaitingOverlay();
   _setAllBars('🌐 Online | '+roomState.roomId+' | '+(roomState.isHost?'You: 🔴 Red':'You: 🔵 Blue'));
@@ -3983,7 +3995,7 @@ function _launchGame(game){
     else if(game==='carrom') startCarromGame(2);
     else if(game==='chess'){ initChess(); _setupOnlineChess(); }
     _startGamePoll(game);
-  },400);
+  },500);
 }
 
 function _startGamePoll(game){
@@ -4082,7 +4094,7 @@ async function createRoom(){
   let _watchId=setInterval(async()=>{
     try{
       const {data}=await supabase.from('rooms').select('started').eq('id',rid).maybeSingle();
-      if(data&&data.started){clearInterval(_watchId);_launchGame(game);}
+      if(data&&data.started){clearInterval(_watchId);if(!roomState.online)_launchGame(game);}
     }catch(e){}
   },600);
   setTimeout(()=>clearInterval(_watchId),600000);
@@ -4100,29 +4112,35 @@ async function joinRoom(){
 
   const {data:room,error}=await supabase.from('rooms').select('*').eq('id',rid).maybeSingle();
   if(error||!room){
-    setRoomStatus('join','❌ Room not found. Ask host to create it first.','err');
+    setRoomStatus('join','❌ Room not found. Check the Room ID.','err');
     document.getElementById('join-room-btn').disabled=false; return;
   }
-  if(room.password&&room.password!==pw){
+  // Password check — only block if host set a password
+  const hostPw=(room.password||'').trim();
+  if(hostPw && hostPw!==pw){
     setRoomStatus('join','❌ Wrong password','err');
     document.getElementById('join-room-btn').disabled=false; return;
   }
+  // Block only if 2 or more real players already joined
   const playerCount=Object.keys(room.players||{}).length;
-  if(room.started && playerCount>=2){
-    setRoomStatus('join','❌ Game already started','err');
+  if(playerCount>=2){
+    setRoomStatus('join','❌ Room is full (game already started)','err');
     document.getElementById('join-room-btn').disabled=false; return;
   }
-  const slot=playerCount;
+  const slot=1; // joiner is always slot 1
   const updatedPlayers={...room.players,[slot]:{name,slot}};
   const {error:upErr}=await supabase.from('rooms').update({players:updatedPlayers,started:true}).eq('id',rid);
   if(upErr){
     setRoomStatus('join','❌ '+upErr.message,'err');
     document.getElementById('join-room-btn').disabled=false; return;
   }
-  roomState={...roomState,roomId:rid,game:room.game,myName:name,mySlot:slot,isHost:false};
+  roomState={...roomState,roomId:rid,game:room.game,myName:name,mySlot:slot,isHost:false,online:false};
   document.getElementById('join-room-btn').disabled=false;
-  closeRoomModal();
-  _launchGame(room.game);
+  setRoomStatus('join','✅ Joined! Starting game…','ok');
+  setTimeout(()=>{
+    closeRoomModal();
+    _launchGame(room.game);
+  },800);
 }
 
 function _cleanupRoom(){_stopPolling();}
