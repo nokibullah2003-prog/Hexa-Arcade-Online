@@ -1504,7 +1504,7 @@ function ludoRollDice(){
   if(ludoState.rolled) return;
   // Online: only roll on your turn
   if(roomState.online){
-    const myColor=roomState.isHost?0:1;
+    const myColor=roomState.isHost?0:2; // 2-player online: host=Red(0), guest=Blue(2)
     if(ludoState.currentPlayer!==myColor){
       document.getElementById('ludo-status').textContent='⏳ Wait for your turn!';
       return;
@@ -1662,7 +1662,7 @@ function ludoNextTurn(pass){
   updateLudoInfo(); drawLudo();
   // Online: update roll button based on whose turn
   if(roomState.online){
-    const myColor=roomState.isHost?0:1;
+    const myColor=roomState.isHost?0:2; // 2-player online: host=Red(0), guest=Blue(2)
     const isMyTurn=(cp===myColor);
     document.getElementById('ludo-roll-btn').disabled=!isMyTurn;
     document.getElementById('ludo-status').textContent=isMyTurn?`Your turn! Roll the dice`:`⏳ Opponent's turn…`;
@@ -2120,6 +2120,7 @@ function snakeRollDice(){
   }
   const val=Math.floor(Math.random()*6)+1;
   snakeState.rolled=true;
+  snakeState.diceVal=val; // store so pushSnakeState can sync it
   document.getElementById('snake-roll-btn').disabled=true;
 
   animateDice('snake-dice', val, ()=>{
@@ -3448,6 +3449,11 @@ function carromAim(e){
 
 function carromStrike(){
   if(carromState.animating)return;
+  // Online: block if not your turn
+  if(roomState.online && carromState.current !== roomState.mySlot){
+    document.getElementById('carrom-status').textContent='⏳ Wait for your turn!';
+    return;
+  }
   const s=carromState;
   const power=parseInt(document.getElementById('power-slider').value);
   const speed=power*3;
@@ -3549,6 +3555,8 @@ function carromAnimate(){
       }
     }
     drawCarrom();
+    // Push final state so the other player sees it
+    if(roomState.online) pushCarromState();
   }
 }
 
@@ -3988,14 +3996,16 @@ function _launchGame(game){
   roomState.online=true;
   hideWaitingOverlay();
   _setAllBars('🌐 Online | '+roomState.roomId+' | '+(roomState.isHost?'You: 🔴 Red':'You: 🔵 Blue'));
-  openGame(game);
+  // Show game screen directly — DON'T call openGame() because it re-shows player-select overlays
+  document.getElementById('home').style.display='none';
+  document.getElementById(game+'-screen').classList.add('active');
   setTimeout(()=>{
     if(game==='ludo') startLudoGame(2);
     else if(game==='snake') startSnakeGame(2);
     else if(game==='carrom') startCarromGame(2);
     else if(game==='chess'){ initChess(); _setupOnlineChess(); }
     _startGamePoll(game);
-  },500);
+  },300);
 }
 
 function _startGamePoll(game){
@@ -4043,7 +4053,7 @@ function applyOnlineLudoState(state){
   ludoState.rolled=state.rolled;
   drawLudo(); updateLudoInfo();
   const cp=ludoState.currentPlayer;
-  const myColor=roomState.isHost?0:1;
+  const myColor=roomState.isHost?0:2; // 2-player online: host=Red(0), guest=Blue(2)
   const isMyTurn=(cp===myColor);
   const rollBtn=document.getElementById('ludo-roll-btn');
   if(rollBtn) rollBtn.disabled=!isMyTurn||ludoState.rolled;
@@ -4270,7 +4280,7 @@ function applyOnlineSnakeState(state){
   snakeState.current=state.current;
   snakeState.rolled=state.rolled;
   snakeState.diceVal=state.diceVal;
-  drawSnakeBoard && drawSnakeBoard();
+  drawSnake();
   const mySlot=roomState.mySlot;
   const isMyTurn=snakeState.current===mySlot;
   const rollBtn=document.getElementById('snake-roll-btn');
@@ -4285,7 +4295,7 @@ function pushCarromState(){
   if(!supabase||!roomState.roomId||!roomState.online) return;
   const s=carromState||window.carromS;
   if(!s) return;
-  const state={_mover:roomState.mySlot,pieces:s.pieces,scores:s.scores,turn:s.turn,striker:s.striker};
+  const state={_mover:roomState.mySlot,pieces:s.pieces,scores:s.scores,current:s.current,striker:s.striker};
   _myLastStateKey=JSON.stringify(state);
   supabase.from('rooms').update({game_state:state}).eq('id',roomState.roomId).then(()=>{});
 }
@@ -4296,10 +4306,11 @@ function applyOnlineCarromState(state){
   if(!s) return;
   s.pieces=state.pieces;
   s.scores=state.scores;
-  s.turn=state.turn;
+  s.current=state.current; // was state.turn — carromState uses .current not .turn
+  if(state.striker) s.striker=state.striker;
   drawCarrom && drawCarrom();
   const mySlot=roomState.mySlot;
-  const isMyTurn=s.turn===mySlot;
+  const isMyTurn=s.current===mySlot; // was s.turn which was always undefined
   const strikeBtn=document.getElementById('strike-btn');
   if(strikeBtn) strikeBtn.disabled=!isMyTurn;
   document.getElementById('carrom-status') && (document.getElementById('carrom-status').textContent=isMyTurn?'Your turn!':'⏳ Opponent\'s turn…');
