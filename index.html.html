@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2558,50 +2559,50 @@ function drawSnake(){
     ctx.save();
     ctx.translate(px,py);
 
-    ctx.shadowBlur=4; ctx.shadowColor='rgba(0,0,0,0.45)'; ctx.shadowOffsetY=2;
-    const bodyG=ctx.createRadialGradient(-r*0.35,-r*0.35,r*0.05,0,0,r);
+    // Drop shadow
+    ctx.shadowBlur=6; ctx.shadowColor='rgba(0,0,0,0.6)'; ctx.shadowOffsetY=2;
+    // Body gradient
+    const bodyG=ctx.createRadialGradient(-r*0.3,-r*0.3,r*0.05,0,0,r);
     bodyG.addColorStop(0,tc.b0);bodyG.addColorStop(0.55,tc.b1);bodyG.addColorStop(1,tc.b2);
     ctx.fillStyle=bodyG;
     ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();
     ctx.shadowBlur=0;ctx.shadowOffsetY=0;
 
-    ctx.strokeStyle=tc.rim;ctx.lineWidth=1.6;
+    // Outer rim glow
+    ctx.shadowColor=tc.rim;ctx.shadowBlur=6;
+    ctx.strokeStyle=tc.rim;ctx.lineWidth=2;
     ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();
-    ctx.strokeStyle='#d4ac0d';ctx.lineWidth=1.8;
-    ctx.beginPath();ctx.arc(0,0,r*0.86,0,Math.PI*2);ctx.stroke();
-    ctx.fillStyle='rgba(0,0,0,0.72)';
-    ctx.beginPath();ctx.arc(0,0,r*0.62,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='#f0c030';ctx.lineWidth=1.6;
-    ctx.beginPath();ctx.arc(0,0,r*0.62,0,Math.PI*2);ctx.stroke();
-    ctx.fillStyle='#ffe040';
-    ctx.font=`900 ${r*1.0}px Georgia,serif`;
+    ctx.shadowBlur=0;
+
+    // Inner ring
+    ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(0,0,r*0.78,0,Math.PI*2);ctx.stroke();
+
+    // "H" — big, bold, white, clearly visible
+    ctx.shadowColor='rgba(0,0,0,0.9)';ctx.shadowBlur=4;ctx.shadowOffsetY=1;
+    ctx.fillStyle='#ffffff';
+    ctx.font=`900 ${r*1.35}px 'Arial Black',Arial,sans-serif`;
     ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.shadowColor='rgba(0,0,0,0.8)';ctx.shadowBlur=2;
-    ctx.fillText('H',0,1);ctx.shadowBlur=0;
+    ctx.fillText('H',0,0.5);
+    ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+
+    // Sheen highlight
     ctx.fillStyle=tc.sheen;
-    ctx.beginPath();ctx.ellipse(-r*0.22,-r*0.28,r*0.40,r*0.20,-0.55,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.38)';
-    ctx.beginPath();ctx.arc(-r*0.28,-r*0.32,r*0.09,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(-r*0.2,-r*0.25,r*0.38,r*0.18,-0.55,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
 
-  const offsets=[[-11,-11],[11,-11],[-11,11],[11,11]];
+  // Small quadrant offsets so up to 4 tokens fit inside one 50x50 cell
+  const tokenOffsets=[[-11,-11],[11,-11],[-11,11],[11,11]];
 
   // Draw static tokens (skip the one currently being animated)
-  const startOffsets=[[-18,-18],[18,-18],[-18,18],[18,18]];
   snakeState.positions.forEach((pos,i)=>{
-    if(snakeState.animToken&&snakeState.animToken.playerIdx===i)return; // skip — drawn separately below
+    if(snakeState.animToken&&snakeState.animToken.playerIdx===i)return;
     let px,py;
-    if(pos===0){
-      // Draw at "start" zone — bottom-left corner below cell 1
-      const cell1=snakeCellPos(1);
-      px=cell1.x+startOffsets[i][0];
-      py=cell1.y+startOffsets[i][1];
-    } else {
-      const p=snakeCellPos(pos);
-      px=p.x+startOffsets[i][0]; py=p.y+startOffsets[i][1];
-    }
-    drawSnakeToken(px,py,i,1);
+    const cellCenter = snakeCellPos(pos===0?1:pos);
+    px = cellCenter.x + tokenOffsets[i][0];
+    py = cellCenter.y + tokenOffsets[i][1];
+    drawSnakeToken(px,py,i,0.72);
   });
 
   // Draw animated token on top (larger, glowing)
@@ -2609,12 +2610,11 @@ function drawSnake(){
     const at=snakeState.animToken;
     const i=at.playerIdx;
     ctx.save();
-    // Glow ring around moving token
     ctx.shadowBlur=18;
     ctx.shadowColor=snakeTokenColors[i].rim;
     ctx.beginPath();ctx.arc(at.x,at.y,10*at.scale,0,Math.PI*2);ctx.stroke();
     ctx.restore();
-    drawSnakeToken(at.x,at.y,i,at.scale);
+    drawSnakeToken(at.x,at.y,i,at.scale*0.72);
   }
 
   // ---- "100" cell golden star ----
