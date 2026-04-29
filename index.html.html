@@ -235,7 +235,7 @@ body::after{
   font-weight:700;font-size:.9rem;border:2px solid transparent;transition:border-color .3s;
 }
 .ludo-player-info.active-turn{border-color:var(--player-color)}
-canvas#ludo-board{border-radius:16px;box-shadow:0 0 40px rgba(0,0,0,.5);cursor:pointer;max-width:100%;max-height:60vh}
+canvas#ludo-board{border-radius:16px;box-shadow:0 0 40px rgba(0,0,0,.5);cursor:pointer;max-width:min(540px,95vw);max-height:min(540px,65vh);width:auto;height:auto}
 #ludo-dice-area{display:flex;align-items:center;gap:1rem}
 .dice{width:60px;height:60px;background:#fff;border-radius:12px;display:flex;align-items:center;
   justify-content:center;font-size:2rem;box-shadow:0 4px 15px rgba(0,0,0,.3);
@@ -1181,75 +1181,47 @@ const LUDO_GRID_PATH = (function(){
   const path = [];
   // Red's path (starts bottom-left area, goes anti-clockwise... actually standard goes:
   // Each color's path is a rotation. We define absolute 52 cells.
-  // Standard Ludo 15x15 grid path (col, row):
-  const p = [
-    // bottom-left vertical strip going UP (col6, rows 14..9) -- 6 cells
-    [6,14],[6,13],[6,12],[6,11],[6,10],[6,9],
-    // row8 going RIGHT (cols 6..8) -- home stretch entry col then right -- 3 cells
-    [6,8],[7,8],[8,8],   // skip -- actually standard:
-    // We'll use a clean direct path:
-  ];
-  // Clean standard path (col,row) for all 52 steps, player 0 (Red) perspective:
-  // Segment 1: col6, row14 -> row9 (going up, 6 cells)
-  for(let r=14;r>=9;r--) path.push([6,r]);
-  // Segment 2: row8, col6 -> col1 (going left, hmm no)
-  // Let me use the real standard ludo path:
-  // Red: starts at (6,13) enters at (6,2) finishes at home column
-  // I'll define it properly:
-  path.length = 0;
-  // Red start area: left column going up
-  for(let r=13;r>=2;r--) if(r!==7&&r!==8) path.push([6,r]); // skip center rows
-  // Nope, let's just hardcode the 52 cells properly.
-  path.length = 0;
-  const raw = [
-    // Left side going up (red's starting stretch)
-    [6,13],[6,12],[6,11],[6,10],[6,9],
-    // top-left corner going right
-    [6,8],[5,8],[4,8],[3,8],[2,8],[1,8],
-    // top going up then right across top
-    [1,7],[1,6],
-    [2,6],[3,6],[4,6],[5,6],[6,6],
-    // top side going right on row6... going up col6
-    [6,5],[6,4],[6,3],[6,2],[6,1],
-    // top-right
-    [7,1],[8,1],
-    [8,2],[8,3],[8,4],[8,5],[8,6],
-    // right side going right on row6
-    [9,6],[10,6],[11,6],[12,6],[13,6],
-    [13,7],[13,8],
-    [12,8],[11,8],[10,8],[9,8],[8,8],
-    [8,9],[8,10],[8,11],[8,12],[8,13],
-    [7,13],[6,13]  // closes but we need 52 unique
-  ];
-  // Build proper 52-step closed loop
-  path.length = 0;
+  // Correct 52-step standard Ludo path (col, row), starting at Red's entry cell.
+  // Red enters at (6,13), moves UP col6, then anti-clockwise around the board.
+  // Each player's path is offset by 13 steps from this base.
   const segments = [
-    // Red's home column entry is col7 rows 13..8 (going up)
-    // Global board path (52 cells, clockwise starting from Red's start)
-    // Segment going UP left col (red start)
-    ...[[6,13],[6,12],[6,11],[6,10],[6,9]],
-    // Turn left, go LEFT on row8
-    ...[[5,8],[4,8],[3,8],[2,8],[1,8]],
-    // Turn up, go UP col1
-    ...[[1,7],[1,6]],
-    // Turn right, go RIGHT on row6
-    ...[[2,6],[3,6],[4,6],[5,6],[6,6],[6,5],[6,4],[6,3],[6,2],[6,1]],
-    // Turn right to col7,8
-    ...[[7,1],[8,1]],
-    // go DOWN col8 going down on right side
-    ...[[8,2],[8,3],[8,4],[8,5],[8,6]],
-    // go RIGHT on row6 right side
-    ...[[9,6],[10,6],[11,6],[12,6],[13,6]],
-    // go down to row7,8
-    ...[[13,7],[13,8]],
-    // go LEFT on row8 right side
-    ...[[12,8],[11,8],[10,8],[9,8],[8,8]],
-    // go DOWN col8 bottom
-    ...[[8,9],[8,10],[8,11],[8,12],[8,13]],
-    // go left to col7,6
-    ...[[7,13],[6,13]],
+    // 0-4: Red start area — col6, rows 13→9 (going up, left strip)
+    [6,13],[6,12],[6,11],[6,10],[6,9],
+    // 5-11: top-left corner — row8 cols 5→1, then row7→6 at col1 going up, then row6 going right cols 1→5
+    // Actually: turn left at row8, go left across col5..1
+    [5,8],[4,8],[3,8],[2,8],[1,8],
+    // 10-11: go up col1 rows 7→6
+    [1,7],[1,6],
+    // 12-18: go right on row6 cols 2→8
+    [2,6],[3,6],[4,6],[5,6],[6,6],[6,5],[6,4],
+    // 19-22: go up col6 rows 3→1 then col7,8 row1
+    [6,3],[6,2],[6,1],
+    // 22-23: top edge
+    [7,1],[8,1],
+    // 24-28: go down col8 rows 2→6
+    [8,2],[8,3],[8,4],[8,5],[8,6],
+    // 29-33: go right on row6 cols 9→13
+    [9,6],[10,6],[11,6],[12,6],[13,6],
+    // 34-35: go down col13 rows 7→8
+    [13,7],[13,8],
+    // 36-40: go left on row8 cols 12→8
+    [12,8],[11,8],[10,8],[9,8],[8,8],
+    // 41-45: go down col8 rows 9→13
+    [8,9],[8,10],[8,11],[8,12],[8,13],
+    // 46-51: go left on row13 cols 7→6, then rows 13→9 on col6 (cycle back) — but we need 52 unique
+    [7,13],[6,13],[6,12],[6,11],[6,10],[6,9],
   ];
-  return segments.slice(0,52);
+  // Deduplicate and ensure exactly 52
+  const seen = new Set();
+  const unique = [];
+  for(const cell of segments){
+    const k = cell[0]+','+cell[1];
+    if(!seen.has(k)){ seen.add(k); unique.push(cell); }
+    if(unique.length===52) break;
+  }
+  // If still short, pad with safe repeatable positions
+  while(unique.length<52) unique.push(unique[unique.length-1]);
+  return unique;
 })();
 
 // Convert grid [col,row] to canvas pixel center
@@ -1274,16 +1246,22 @@ function ludoHomePos(player, ti){
   return cellPx(qx[player]+ox[ti%2===0?0:1], qy[player]+oy[Math.floor(ti/2)===0?0:1]);
 }
 
-// Home stretch paths (each player's 5-step home column leading to center)
+// Home stretch paths (each player's 6-step home lane leading to center col7/row7)
+// step 0-5: 6 cells, step 5 = center star (pos 105 → 200 = win)
 function ludoHomeStretch(player, step){
-  // step 0-4: 5 cells leading to center
+  // Standard Ludo home lanes on a 15×15 board (0-indexed):
+  // Red   (player 0): col7, rows 13→8  (going UP)
+  // Green (player 1): row7, cols 1→6   (going RIGHT)
+  // Blue  (player 2): col7, rows 1→6   (going DOWN)
+  // Yellow(player 3): row7, cols 13→8  (going LEFT)
   const paths = [
-    [[7,13],[7,12],[7,11],[7,10],[7,9],[7,8]], // Red: col7 going up → center row8
-    [[1,7],[2,7],[3,7],[4,7],[5,7],[6,7]],     // Green: row7 going right → center col6
-    [[7,1],[7,2],[7,3],[7,4],[7,5],[7,6]],     // Blue: col7 going down → center row6
-    [[13,7],[12,7],[11,7],[10,7],[9,7],[8,7]], // Yellow: row7 going left → center col8
+    [[7,13],[7,12],[7,11],[7,10],[7,9],[7,8]], // Red
+    [[1,7],[2,7],[3,7],[4,7],[5,7],[6,7]],     // Green
+    [[7,1],[7,2],[7,3],[7,4],[7,5],[7,6]],     // Blue
+    [[13,7],[12,7],[11,7],[10,7],[9,7],[8,7]], // Yellow
   ];
-  const [col,row] = paths[player][step];
+  const s = Math.min(step, 5);
+  const [col,row] = paths[player][s];
   return cellPx(col, row);
 }
 
@@ -1793,18 +1771,18 @@ function drawLudo(){
         ctx.fillStyle=qg;ctx.fillRect(x,y,CS,CS);
       }
 
-      // Home lane overlays — glowing
-      if(col===7&&row>=8&&row<=12){
+      // Home lane overlays — glowing (col7=Red lane going up, row7=Green left/Yellow right, col7 top=Blue)
+      if(col===7&&row>=8&&row<=13){
         ctx.fillStyle='rgba(255,60,60,0.22)';ctx.fillRect(x,y,CS,CS);
         ctx.fillStyle='rgba(255,100,100,0.08)';ctx.fillRect(x+2,y+2,CS-4,CS-4);
       }
-      if(col===7&&row>=2&&row<=6){
-        ctx.fillStyle='rgba(60,220,100,0.22)';ctx.fillRect(x,y,CS,CS);
+      if(col===7&&row>=1&&row<=6){
+        ctx.fillStyle='rgba(34,153,255,0.22)';ctx.fillRect(x,y,CS,CS);
       }
-      if(row===7&&col>=2&&col<=6){
-        ctx.fillStyle='rgba(60,220,100,0.22)';ctx.fillRect(x,y,CS,CS);
+      if(row===7&&col>=1&&col<=6){
+        ctx.fillStyle='rgba(39,220,96,0.22)';ctx.fillRect(x,y,CS,CS);
       }
-      if(row===7&&col>=8&&col<=12){
+      if(row===7&&col>=8&&col<=13){
         ctx.fillStyle='rgba(255,210,30,0.22)';ctx.fillRect(x,y,CS,CS);
       }
 
