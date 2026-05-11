@@ -1710,12 +1710,23 @@ function drawLudo(){
         ctx.fillStyle='rgba(255,210,30,0.22)';ctx.fillRect(x,y,CS,CS);
       }
 
-      // Safe star cells — glowing emerald
+      // Safe star cells — colored per side (Red, Green, Blue, Yellow)
+      const safeColorMap = {
+        '6,2':  {bg:'rgba(255,60,60,0.18)',  glow:'#ff3c3c', fill:'rgba(255,60,60,0.8)'},
+        '2,6':  {bg:'rgba(255,60,60,0.18)',  glow:'#ff3c3c', fill:'rgba(255,60,60,0.8)'},
+        '8,2':  {bg:'rgba(39,238,96,0.18)',  glow:'#27ee60', fill:'rgba(39,238,96,0.8)'},
+        '12,6': {bg:'rgba(39,238,96,0.18)',  glow:'#27ee60', fill:'rgba(39,238,96,0.8)'},
+        '12,8': {bg:'rgba(34,153,255,0.18)', glow:'#2299ff', fill:'rgba(34,153,255,0.8)'},
+        '8,12': {bg:'rgba(34,153,255,0.18)', glow:'#2299ff', fill:'rgba(34,153,255,0.8)'},
+        '2,8':  {bg:'rgba(255,215,0,0.18)',  glow:'#ffd700', fill:'rgba(255,215,0,0.8)'},
+        '6,12': {bg:'rgba(255,215,0,0.18)',  glow:'#ffd700', fill:'rgba(255,215,0,0.8)'},
+      };
       const isSafe = safeGridCells.some(([c,rr])=>c===col&&rr===row);
       if(isSafe){
-        ctx.fillStyle='rgba(0,255,140,0.18)';ctx.fillRect(x,y,CS,CS);
-        ctx.shadowColor='#00ff88';ctx.shadowBlur=8;
-        ctx.fillStyle='rgba(0,255,140,0.7)';
+        const sc = safeColorMap[col+','+row] || {bg:'rgba(0,255,140,0.18)',glow:'#00ff88',fill:'rgba(0,255,140,0.7)'};
+        ctx.fillStyle=sc.bg;ctx.fillRect(x,y,CS,CS);
+        ctx.shadowColor=sc.glow;ctx.shadowBlur=8;
+        ctx.fillStyle=sc.fill;
         ctx.font=`${CS*0.48}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
         ctx.fillText('★',x+CS/2,y+CS/2);
         ctx.shadowBlur=0;
